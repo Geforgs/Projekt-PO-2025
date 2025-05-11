@@ -10,6 +10,12 @@
     </parent>
 
     <artifactId>core</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>po25</groupId>
+            <artifactId>platform-api</artifactId>
+        </dependency>
+    </dependencies>
 
 
 </project>
