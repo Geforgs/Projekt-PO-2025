@@ -5,7 +5,7 @@ import po25.Platform;
 import po25.PlatformException;
 import po25.Task;
 
-import po25.;
+import po25.CodeforcesPlatform;
 // import po25.SatoriPlatform;
 
 import java.util.Collections;
@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ServiceLoader; // For a more dynamic way to load platforms
+import java.util.ServiceLoader;
 
 public class PlatformService {
 
@@ -21,45 +21,23 @@ public class PlatformService {
 
     public PlatformService() {
         this.registeredPlatforms = new HashMap<>();
-        // Initialize and register available platform implementations
         loadAndRegisterPlatforms();
     }
 
     private void loadAndRegisterPlatforms() {
-        // Method 1: Manual Registration (Simpler for fewer platforms)
-        // Ensure these platform classes are public and have a public no-arg constructor.
-        // Also, the 'core' module's pom.xml must have dependencies on 'platform-codeforces', etc.
         try {
-            Platform codeforces = new CodeforcesPlatform(); // Assumes CodeforcesPlatform implements po25.Platform
+            Platform codeforces = new CodeforcesPlatform();
             registeredPlatforms.put(codeforces.getPlatformName().toLowerCase(), codeforces);
         } catch (Exception e) {
-            // Handle issues with platform instantiation, e.g., log an error
             System.err.println("Error initializing Codeforces platform: " + e.getMessage());
         }
 
-        // Example for Satori if/when implemented:
         // try {
         //     Platform satori = new SatoriPlatform(); // Assumes SatoriPlatform implements po25.Platform
         //     registeredPlatforms.put(satori.getPlatformName().toLowerCase(), satori);
         // } catch (Exception e) {
         //     System.err.println("Error initializing Satori platform: " + e.getMessage());
         // }
-
-        // Method 2: Using ServiceLoader (More dynamic and extensible)
-        // This is generally preferred for decoupling. Each platform module would provide
-        // a service implementation file in META-INF/services/po25.Platform
-        /*
-        ServiceLoader<Platform> platformLoader = ServiceLoader.load(Platform.class);
-        for (Platform platform : platformLoader) {
-            registeredPlatforms.put(platform.getPlatformName().toLowerCase(), platform);
-            System.out.println("Registered platform via ServiceLoader: " + platform.getPlatformName());
-        }
-        if (registeredPlatforms.isEmpty() && !"Method 1 was used above") {
-             System.err.println("No platforms were loaded by ServiceLoader. Check META-INF/services configurations.");
-        }
-        */
-        // For now, we'll stick to manual registration above for simplicity in this example.
-        // If using ServiceLoader, remove the manual registrations or ensure they don't conflict.
 
         if (registeredPlatforms.isEmpty()) {
             System.err.println("Warning: No platforms were registered in PlatformService.");
@@ -171,15 +149,13 @@ public class PlatformService {
      * @throws PlatformException if there's an issue communicating with the platform or the platform/contest is invalid.
      */
     public List<Task> getTasksForContest(String platformName, String contestId) throws PlatformException {
-        Platform platform = getPlatform(platformName); // Throws PlatformException if platform not found
+        Platform platform = getPlatform(platformName);
 
         Optional<Contest> contestOptional = platform.getContestById(contestId);
         if (contestOptional.isPresent()) {
             Contest contest = contestOptional.get();
-            return contest.getTasks(); // Assuming Contest.getTasks() returns List<Task>
+            return contest.getTasks();
         } else {
-            // Contest not found, you could throw an exception or return empty list
-            // For CLI, returning an empty list and letting the command report "not found" is often fine.
             System.err.println("Contest '" + contestId + "' not found on platform '" + platformName + "'.");
             return Collections.emptyList();
         }
@@ -201,29 +177,4 @@ public class PlatformService {
         }
         return Optional.empty();
     }
-
-    // --- Placeholder methods for functionalities defined in your Platform interface ---
-    // You'll need to define classes like Solution, Submission, SubmissionResult in platform-api
-    // and then implement these methods fully.
-
-    /*
-    public String submitSolution(String platformName, Task task, String solutionCode, String languageId) throws PlatformException {
-        Platform platform = getPlatform(platformName);
-        // Ensure task is valid and from the correct platform if necessary
-        // return platform.submitSolution(task, solutionCode, languageId);
-        throw new UnsupportedOperationException("submitSolution not yet implemented in PlatformService.");
-    }
-
-    public SubmissionResult getSubmissionStatus(String platformName, String submissionId) throws PlatformException {
-        Platform platform = getPlatform(platformName);
-        // return platform.getSubmissionStatus(submissionId);
-        throw new UnsupportedOperationException("getSubmissionStatus not yet implemented in PlatformService.");
-    }
-
-    public List<Submission> getSubmissionHistory(String platformName, Task task) throws PlatformException {
-        Platform platform = getPlatform(platformName);
-        // return platform.getSubmissionHistory(task);
-        throw new UnsupportedOperationException("getSubmissionHistory not yet implemented in PlatformService.");
-    }
-    */
 }
