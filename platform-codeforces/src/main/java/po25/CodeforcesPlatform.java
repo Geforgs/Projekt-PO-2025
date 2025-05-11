@@ -24,7 +24,6 @@ public class CodeforcesPlatform implements Platform {
 
     @Override
     public void login(String username, String password) throws PlatformException {
-        // dla uproszczenia: brak autoryzacji
         loggedIn = true;
     }
 
@@ -69,7 +68,6 @@ public class CodeforcesPlatform implements Platform {
                         ZoneId.systemDefault());
                 ZonedDateTime end   = start.plusSeconds(durSec);
 
-                // Tworzymy obiekt Contest tylko dla BEFORE i FINISHED
                 if ("BEFORE".equals(phase) || "FINISHED".equals(phase)) {
                     list.add(new CfContest(id, name, start, end, this));
                 }
@@ -125,7 +123,7 @@ public class CodeforcesPlatform implements Platform {
                 String link  = "https://codeforces.com/contest/"
                         + contest.getId()
                         + "/problem/" + index;
-                tasks.add(new CfTask(index, name, link));
+                tasks.add(new CfTask(name, link));
             }
             return tasks;
         } catch (IOException e) {
