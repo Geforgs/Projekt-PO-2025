@@ -12,15 +12,21 @@
     </parent>
 
     <artifactId>core</artifactId>
+    <packaging>jar</packaging>
+    <name>Core Logic Module</name>
+    <description>Core business logic and service layer for the DCCP.</description>
+
     <dependencies>
         <dependency>
-            <groupId>po25</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>platform-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>platform-codeforces</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
-
-    <!--
-      Tu możesz zadeklarować dependencies specyficzne dla modułu core,
-      jeśli są potrzebne. Na razie nic tu nie ma.
-    -->
 </project>
