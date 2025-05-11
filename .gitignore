@@ -1,3 +1,19 @@
+# Maven
+target/
+**/target/
+
+# IDE and project files
 **/.idea/**
-**/target/**
 *.iml
+*.ipr
+*.iws
+nbproject/
+build/
+.DS_Store
+
+# Log files
+*.log
+
+# Other generated files
+dependency-reduced-pom.xml
+# but '/target/' or '**/target/' is preferred
