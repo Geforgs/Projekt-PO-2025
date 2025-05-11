@@ -1,52 +1,56 @@
 package po25;
 
-/*
-* - nazwa zadania
-* - treść
-* - wyjście/wejście (opcjonalnie)
-* - maks. czas wykonywania/limity czasowe (opcjonalnie)
-* - limity pamięciowe (opcjonalnie)
-* */
-
 import java.util.Optional;
 
 public interface Task {
+    /**
+     * Returns the ID of the task.
+     *
+     * @return task ID.
+     */
+    String getId();
 
     /**
-     * Zwraca nazwę zadania.
-     * @return nazwa zadania.
+     * Returns the name of the task.
+     *
+     * @return task name.
      */
     String getName();
 
     /**
-     * Zwraca treść zadania. Może zawierać HTML lub inny format zależny od platformy.
-     * @return treść zadania.
+     * Returns the content of the task. May contain HTML or other platform-dependent format.
+     *
+     * @return task content.
      */
     String getContent();
 
     /**
-     * Zwraca przykładowe dane wejściowe dla zadania, jeśli są dostępne.
-     * @return Optional zawierający przykładowe wejście lub pusty Optional.
+     * Returns sample input data for the task, if available.
+     *
+     * @return Optional containing the sample input or an empty Optional.
      */
     Optional<String> getSampleInput();
 
     /**
-     * Zwraca przykładowe dane wyjściowe dla zadania, jeśli są dostępne.
-     * @return Optional zawierający przykładowe wyjście lub pusty Optional.
+     * Returns sample output data for the task, if available.
+     *
+     * @return Optional containing the sample output or an empty Optional.
      */
     Optional<String> getSampleOutput();
 
     /**
-     * Zwraca limit czasowy na wykonanie zadania, jeśli jest określony.
-     * Format może być różny (np. "1s", "2000ms").
-     * @return Optional zawierający limit czasowy lub pusty Optional.
+     * Returns the time limit for task execution, if specified.
+     * The format may vary (e.g., "1s", "2000ms").
+     *
+     * @return Optional containing the time limit or an empty Optional.
      */
     Optional<String> getTimeLimit();
 
     /**
-     * Zwraca limit pamięciowy dla zadania, jeśli jest określony.
-     * Format może być różny (np. "256MB").
-     * @return Optional zawierający limit pamięci lub pusty Optional.
+     * Returns the memory limit for the task, if specified.
+     * The format may vary (e.g., "256MB").
+     *
+     * @return Optional containing the memory limit or an empty Optional.
      */
     Optional<String> getMemoryLimit();
 }
