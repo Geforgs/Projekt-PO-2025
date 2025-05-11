@@ -29,7 +29,7 @@ public interface Contest {
      * Zwraca listę zadań dostępnych w ramach tego konkursu.
      * @return lista obiektów Task.
      */
-    List<Task> getTasks();
+    List<Task> getTasks() throws PlatformException;
 
     /**
      * Zwraca opis konkursu, jeśli jest dostępny.
@@ -42,7 +42,7 @@ public interface Contest {
      * @param taskId identyfikator zadania.
      * @return Optional zawierający obiekt Task, jeśli zadanie o danym ID istnieje, w przeciwnym razie pusty Optional.
      */
-    Optional<Task> getTaskById(String taskId);
+    Optional<Task> getTaskById(String taskId) throws PlatformException;
 
     /**
      * Zwraca datę i czas rozpoczęcia konkursu, jeśli są określone.
