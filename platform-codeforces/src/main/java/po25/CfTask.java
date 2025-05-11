@@ -6,6 +6,7 @@ import java.util.Optional;
  * Implementacja interfejsu Task dla Codeforces.
  */
 class CfTask implements Task {
+    //    private final String id;
     private final String name;
     private final String contentUrl;
 
@@ -18,6 +19,13 @@ class CfTask implements Task {
     CfTask(String index, String name, String url) {
         this.name = index + " - " + name;
         this.contentUrl = url;
+    }
+
+    // TODO:
+    @Override
+    public String getId() {
+//        return id;
+        return "";
     }
 
     @Override
