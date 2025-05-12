@@ -2,13 +2,12 @@ package po25.commands;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
 
 import po25.PlatformException;
 import po25.Task;
 import po25.commands.mixins.ContestIdOptionMixin;
 import po25.commands.mixins.PlatformOptionMixin;
+import po25.commands.mixins.TaskIdOptionMixin;
 import po25.service.PlatformService;
 
 import java.util.Optional;
@@ -26,8 +25,8 @@ public class ViewTaskCommand implements Callable<Integer> {
     @CommandLine.Mixin
     private ContestIdOptionMixin contestIdMixin;
 
-    @Parameters(index = "0", description = "The ID/index of the task (e.g., 'A', 'B', '101A').", arity = "1")
-    private String taskId;
+    @CommandLine.Mixin
+    private TaskIdOptionMixin taskIdOptionMixin;
 
     private PlatformService platformService;
 
@@ -39,6 +38,7 @@ public class ViewTaskCommand implements Callable<Integer> {
     public Integer call() throws PlatformException {
         String platformName = platformOptionMixin.platform;
         String contestId = contestIdMixin.contestId;
+        String taskId = taskIdOptionMixin.taskId;
 
         System.out.println("Fetching details for task '" + taskId + "' in contest '" + contestId + "' on platform '" + platformName + "'...");
 
