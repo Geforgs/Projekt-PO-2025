@@ -58,16 +58,16 @@ public class CodeforcesPlatform implements Platform {
             List<Contest> list = new ArrayList<>();
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject c = arr.getJSONObject(i);
-                long id       = c.getLong("id");
-                String name   = c.getString("name");
-                String phase  = c.getString("phase");
+                long id = c.getLong("id");
+                String name = c.getString("name");
+                String phase = c.getString("phase");
                 long startSec = c.getLong("startTimeSeconds");
-                int  durSec   = c.getInt("durationSeconds");
+                int durSec = c.getInt("durationSeconds");
 
                 ZonedDateTime start = ZonedDateTime.ofInstant(
                         Instant.ofEpochSecond(startSec),
                         ZoneId.systemDefault());
-                ZonedDateTime end   = start.plusSeconds(durSec);
+                ZonedDateTime end = start.plusSeconds(durSec);
 
                 // Tworzymy obiekt Contest tylko dla BEFORE i FINISHED
                 if ("BEFORE".equals(phase) || "FINISHED".equals(phase)) {
@@ -89,9 +89,24 @@ public class CodeforcesPlatform implements Platform {
             return Optional.empty();
         }
         return getAllContests().stream()
-                .filter(c -> ((CfContest)c).getId() == id)
+                .filter(c -> ((CfContest) c).getId() == id)
                 .findFirst();
     }
+
+//    @Override
+//    public String submitSolution(Task task, String solutionCode, String languageId) throws PlatformException {
+//        return "";
+//    }
+//
+//    @Override
+//    public SubmissionResult getSubmissionStatus(String submissionId) throws PlatformException {
+//        return null;
+//    }
+//
+//    @Override
+//    public List<Submission> getSubmissionHistory(Task task) throws PlatformException {
+//        return List.of();
+//    }
 
     /**
      * Wewnętrzna metoda pobierająca zadania dla danego contestu.
@@ -121,8 +136,8 @@ public class CodeforcesPlatform implements Platform {
             for (int i = 0; i < problems.length(); i++) {
                 JSONObject p = problems.getJSONObject(i);
                 String index = p.getString("index");
-                String name  = p.getString("name");
-                String link  = "https://codeforces.com/contest/"
+                String name = p.getString("name");
+                String link = "https://codeforces.com/contest/"
                         + contest.getId()
                         + "/problem/" + index;
                 tasks.add(new CfTask(index, name, link));

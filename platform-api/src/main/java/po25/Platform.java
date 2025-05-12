@@ -11,6 +11,7 @@ public interface Platform {
 
     /**
      * Returns the name of the platform.
+     *
      * @return platform name.
      */
     String getPlatformName();
@@ -19,6 +20,7 @@ public interface Platform {
      * Logs the user into the platform.
      * The implementation should securely handle credentials.
      * May throw exceptions in case of login failure (e.g., PlatformLoginException).
+     *
      * @param username username.
      * @param password user's password.
      */
@@ -26,6 +28,7 @@ public interface Platform {
 
     /**
      * Checks if the current user session is still active/valid.
+     *
      * @return true if the session is valid, false otherwise.
      */
     boolean isSessionValid();
@@ -38,12 +41,14 @@ public interface Platform {
     /**
      * Retrieves a list of all available (or e.g., watched) contests on the platform.
      * May throw exceptions in case of network or API problems (e.g., PlatformRequestException).
+     *
      * @return list of Contest objects.
      */
     List<Contest> getAllContests() throws PlatformException;
 
     /**
      * Retrieves a specific contest based on its identifier.
+     *
      * @param contestId contest identifier.
      * @return Optional containing the Contest object if a contest with the given ID exists, otherwise an empty Optional.
      */
@@ -57,7 +62,7 @@ public interface Platform {
      * @param languageId identifier of the programming language.
      * @return identifier of the submitted solution.
      */
-    // String submitSolution(Task task, String solutionCode, String languageId) throws PlatformException;
+//     String submitSolution(Task task, String solutionCode, String languageId) throws PlatformException;
 
     /**
      * Retrieves the status/result of a specific submission.
@@ -65,12 +70,13 @@ public interface Platform {
      * @param submissionId submission identifier.
      * @return object representing the submission result.
      */
-    // SubmissionResult getSubmissionStatus(String submissionId) throws PlatformException;
+//     SubmissionResult getSubmissionStatus(String submissionId) throws PlatformException;
 
     /**
      * Retrieves the submission history for a given task or user.
+     *
      * @return list of submissions.
      */
-    // List<Submission> getSubmissionHistory(Task task) throws PlatformException;
+//    List<Submission> getSubmissionHistory(Task task) throws PlatformException;
 }
 

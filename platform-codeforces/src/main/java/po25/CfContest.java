@@ -29,7 +29,7 @@ class CfContest implements Contest {
         this.platform = platform;
     }
 
-    long getId() {
+    public long getId() {
         return id;
     }
 

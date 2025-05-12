@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ServiceLoader;
 
 public class PlatformService {
 
@@ -39,11 +38,11 @@ public class PlatformService {
         //     System.err.println("Error initializing Satori platform: " + e.getMessage());
         // }
 
-        if (registeredPlatforms.isEmpty()) {
-            System.err.println("Warning: No platforms were registered in PlatformService.");
-        } else {
-            System.out.println("PlatformService initialized. Registered platforms: " + registeredPlatforms.keySet());
-        }
+//        if (registeredPlatforms.isEmpty()) {
+//            System.err.println("Warning: No platforms were registered in PlatformService.");
+//        } else {
+//            System.out.println("PlatformService initialized. Registered platforms: " + registeredPlatforms.keySet());
+//        }
     }
 
     /**
@@ -176,5 +175,8 @@ public class PlatformService {
             return contestOptional.get().getTaskById(taskId);
         }
         return Optional.empty();
+    }
+
+    public void viewTask(String platform, String contestId, String taskId) {
     }
 }
