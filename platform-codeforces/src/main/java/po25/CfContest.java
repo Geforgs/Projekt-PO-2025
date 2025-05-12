@@ -54,7 +54,7 @@ class CfContest implements Contest {
     @Override
     public Optional<Task> getTaskById(String taskId) throws PlatformException {
         return getTasks().stream()
-                .filter(t -> t.getName().startsWith(taskId))
+                .filter(t -> t.getId().equals(taskId))
                 .findFirst();
     }
 
