@@ -2,29 +2,34 @@ package po25.commands;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+import po25.PlatformException;
+import po25.Task;
 import po25.commands.mixins.PlatformOptionMixin;
 import po25.service.PlatformService;
 
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 @Command(name = "view-task",
+        aliases = {"vt", "show-task"},
         description = "Views a specific task in contest and optionally saves it.",
         mixinStandardHelpOptions = true)
 public class ViewTaskCommand implements Callable<Integer> {
 
     @CommandLine.Mixin
-    private PlatformOptionMixin platform;
+    private PlatformOptionMixin platformOptionMixin;
 
-    @Parameters(index = "0", description = "The contest ID.")
+    @Option(names = {"-c", "--contest"}, required = true, description = "The ID of the contest containing the task.")
     private String contestId;
 
-    @Parameters(index = "1", description = "The task ID.")
+    @Parameters(index = "0", description = "The ID/index of the task (e.g., 'A', 'B', '101A').", arity = "1")
     private String taskId;
 
-    @CommandLine.Option(names = {"-s", "--save"}, description = "Save the task content locally.")
-    private boolean save;
+//    @CommandLine.Option(names = {"-s", "--save"}, description = "Save the task content locally.")
+//    private boolean save;
 
     private PlatformService platformService;
 
@@ -33,20 +38,57 @@ public class ViewTaskCommand implements Callable<Integer> {
     }
 
     @Override
-    public Integer call() throws Exception {
-        System.out.println("Executing view-task command...");
-        System.out.println("Platform: " + platform);
-        System.out.println("Task ID: " + taskId);
-        if (save) {
-            System.out.println("Task will be saved locally.");
-            // platformService.viewAndSaveTask(platform, taskId);
-        } else {
-            platformService.viewTask(platform.platform, contestId, taskId);
-            System.out.println("Task content would be displayed here.");
+    public Integer call() throws PlatformException {
+        String platformName = platformOptionMixin.platform;
+
+        System.out.println("Fetching details for task '" + taskId + "' in contest '" + contestId + "' on platform '" + platformName + "'...");
+
+        try {
+            Optional<Task> taskOptional = platformService.getTaskInContest(platformName, contestId, taskId);
+
+            if (taskOptional.isPresent()) {
+                Task task = taskOptional.get();
+                displayTaskDetails(task);
+            } else {
+                System.out.println("Task '" + taskId + "' in contest '" + contestId + "' not found on platform '" + platformName + "'.");
+            }
+            return 0;
+        } catch (PlatformException e) {
+            System.err.println("Error fetching task details from '" + platformName + "': " + e.getMessage());
+            // e.printStackTrace();
+            return 1;
         }
-        System.out.println("[Mock] Task " + taskId + " content from " + platform + " would be shown.");
-        return 0;
+    }
+
+    private void displayTaskDetails(Task task) {
+        System.out.println("\n--- Task Details ---");
+        System.out.println("Task ID:       " + task.getId());
+        System.out.println("Task Name:     " + task.getName());
+        System.out.println("--------------------");
+
+        System.out.println("\nContent/Problem Statement:");
+        try {
+            System.out.println(task.getContent());
+        } catch (Exception e) {
+            System.out.println("[Error fetching task content: " + e.getMessage() + "]");
+        }
+        System.out.println("--------------------");
+
+        task.getSampleInput().ifPresent(input -> {
+            System.out.println("\nSample Input:");
+            System.out.println(input);
+            System.out.println("--------------------");
+        });
+
+        task.getSampleOutput().ifPresent(output -> {
+            System.out.println("\nSample Output:");
+            System.out.println(output);
+            System.out.println("--------------------");
+        });
+
+        task.getTimeLimit().ifPresent(limit -> System.out.println("Time Limit:    " + limit));
+        task.getMemoryLimit().ifPresent(limit -> System.out.println("Memory Limit:  " + limit));
+        System.out.println("--------------------");
     }
 }
-
 
