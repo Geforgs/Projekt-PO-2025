@@ -1,0 +1,42 @@
+#!/bin/bash
+#
+# Skrypt wrapper do uruchamiania aplikacji Konkurs CLI
+#
+# Ten skrypt powinien być umieszczony w głównym katalogu projektu.
+# Zakłada on, że plik .jar aplikacji znajduje się w podkatalogu ui-cli/target/
+# względem lokalizacji tego skryptu.
+#
+# Aby go użyć:
+# 1. Zbuduj projekt Mavenem (np. `mvn clean package` w głównym katalogu projektu),
+#    aby plik JAR został wygenerowany.
+# 2. Umieść ten skrypt w głównym katalogu projektu.
+# 3. Nadaj skryptowi uprawnienia do wykonywania: `chmod +x konkurs`
+# 4. Uruchamiaj aplikację z głównego katalogu projektu poprzez: `./konkurs <polecenie> [opcje...]`
+#    (lub jeśli główny katalog projektu jest w PATH, lub skrypt jest w PATH: konkurs <polecenie> [opcje...])
+
+# Ustal katalog, w którym znajduje się ten skrypt (powinien to być główny katalog projektu)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Nazwa pliku JAR Twojej aplikacji
+JAR_NAME="ui-cli-1.0-SNAPSHOT.jar"
+
+# Względna ścieżka do pliku JAR od lokalizacji skryptu
+RELATIVE_JAR_PATH="ui-cli/target/$JAR_NAME"
+
+# Pełna, absolutna ścieżka do pliku JAR
+JAR_PATH="$SCRIPT_DIR/$RELATIVE_JAR_PATH"
+
+# Sprawdź, czy plik JAR istnieje we wskazanej lokalizacji
+# Ten test zadziała poprawnie dopiero PO zbudowaniu projektu Mavenem.
+if [ ! -f "$JAR_PATH" ]; then
+    echo "Błąd: Nie znaleziono pliku JAR pod ścieżką: $JAR_PATH" >&2
+    echo "Upewnij się, że projekt został zbudowany (np. przez 'mvn clean package')," >&2
+    echo "a skrypt '$0' znajduje się w głównym katalogu projektu." >&2
+    exit 1
+fi
+
+# Uruchom aplikację Java, przekazując jej wszystkie argumenty podane do skryptu ("$@")
+java -jar "$JAR_PATH" "$@"
+
+# Opcjonalnie: przechwyć kod wyjścia z aplikacji Javy i zwróć go
+# exit $?
