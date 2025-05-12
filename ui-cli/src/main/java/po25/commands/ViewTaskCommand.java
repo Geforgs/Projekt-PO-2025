@@ -7,6 +7,7 @@ import picocli.CommandLine.Parameters;
 
 import po25.PlatformException;
 import po25.Task;
+import po25.commands.mixins.ContestIdOptionMixin;
 import po25.commands.mixins.PlatformOptionMixin;
 import po25.service.PlatformService;
 
@@ -22,14 +23,11 @@ public class ViewTaskCommand implements Callable<Integer> {
     @CommandLine.Mixin
     private PlatformOptionMixin platformOptionMixin;
 
-    @Option(names = {"-c", "--contest"}, required = true, description = "The ID of the contest containing the task.")
-    private String contestId;
+    @CommandLine.Mixin
+    private ContestIdOptionMixin contestIdMixin;
 
     @Parameters(index = "0", description = "The ID/index of the task (e.g., 'A', 'B', '101A').", arity = "1")
     private String taskId;
-
-//    @CommandLine.Option(names = {"-s", "--save"}, description = "Save the task content locally.")
-//    private boolean save;
 
     private PlatformService platformService;
 
@@ -40,6 +38,7 @@ public class ViewTaskCommand implements Callable<Integer> {
     @Override
     public Integer call() throws PlatformException {
         String platformName = platformOptionMixin.platform;
+        String contestId = contestIdMixin.contestId;
 
         System.out.println("Fetching details for task '" + taskId + "' in contest '" + contestId + "' on platform '" + platformName + "'...");
 
