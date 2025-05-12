@@ -16,4 +16,3 @@ build/
 
 # Other generated files
 dependency-reduced-pom.xml
-# but '/target/' or '**/target/' is preferred
