@@ -4,6 +4,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+import po25.commands.mixins.ContestIdOptionMixin;
 import po25.commands.mixins.PlatformOptionMixin;
 import po25.service.PlatformService;
 import po25.Task;
@@ -19,10 +20,8 @@ public class ListTasksCommand implements Callable<Integer> {
     @CommandLine.Mixin
     private PlatformOptionMixin platformOptionMixin;
 
-    @Parameters(index = "0",
-            arity = "1",
-            description = "The ID of the contest to list tasks for (required).")
-    private String contestId;
+    @CommandLine.Mixin
+    private ContestIdOptionMixin contestIdOptionMixin;
 
     private PlatformService platformService;
 
@@ -33,6 +32,7 @@ public class ListTasksCommand implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         String targetPlatform = platformOptionMixin.platform;
+        String contestId = contestIdOptionMixin.contestId;
 
         System.out.println("Executing 'list-tasks' command...");
         System.out.println("Target Platform: " + targetPlatform);

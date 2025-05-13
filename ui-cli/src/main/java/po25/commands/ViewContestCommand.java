@@ -6,6 +6,7 @@ import picocli.CommandLine.Parameters;
 import po25.Contest;
 import po25.PlatformException;
 import po25.Task;
+import po25.commands.mixins.ContestIdOptionMixin;
 import po25.commands.mixins.PlatformOptionMixin;
 import po25.service.PlatformService;
 
@@ -26,10 +27,8 @@ public class ViewContestCommand implements Callable<Integer> {
     @CommandLine.Mixin
     private PlatformOptionMixin platformOptionMixin;
 
-    @Parameters(index = "0",
-            description = "The ID of the contest to view.",
-            arity = "1")
-    private String contestIdToView;
+    @CommandLine.Mixin
+    private ContestIdOptionMixin contestIdOptionMixin;
 
     private PlatformService platformService;
 
@@ -40,6 +39,7 @@ public class ViewContestCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         String platformName = platformOptionMixin.platform;
+        String contestIdToView = contestIdOptionMixin.contestId;
 
         System.out.println("Fetching details for contest '" + contestIdToView + "' on platform '" + platformName + "'...");
         try {

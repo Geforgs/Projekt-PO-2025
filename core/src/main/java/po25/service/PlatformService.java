@@ -176,7 +176,4 @@ public class PlatformService {
         }
         return Optional.empty();
     }
-
-    public void viewTask(String platform, String contestId, String taskId) {
-    }
 }
