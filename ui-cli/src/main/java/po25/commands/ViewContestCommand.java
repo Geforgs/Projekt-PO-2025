@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 
 @Command(name = "view-contest",
-        aliases = {"vc", "show-contest"},
+        aliases = {"vc"},
         description = "Views details of a specific contest, including its tasks, from a platform.",
         mixinStandardHelpOptions = true)
 public class ViewContestCommand implements Callable<Integer> {

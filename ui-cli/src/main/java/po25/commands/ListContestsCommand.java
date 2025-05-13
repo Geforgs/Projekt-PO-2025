@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 @Command(name = "list-contests",
-        aliases = {"lsc", "lc"},
+        aliases = {"lc"},
         description = "Lists available contests on the specified platform.",
         mixinStandardHelpOptions = true)
 public class ListContestsCommand implements Callable<Integer> {
