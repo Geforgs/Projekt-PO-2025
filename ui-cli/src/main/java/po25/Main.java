@@ -14,7 +14,6 @@ import java.util.concurrent.Callable;
         subcommands = {
                 ListContestsCommand.class,
                 ViewContestCommand.class,
-                ListTasksCommand.class,
                 ViewTaskCommand.class,
 //                SubmitCommand.class,
 //                StatusCommand.class,
