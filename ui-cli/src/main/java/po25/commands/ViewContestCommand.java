@@ -61,9 +61,7 @@ public class ViewContestCommand implements Callable<Integer> {
         System.out.println("\n--- Contest Details ---");
         System.out.println("ID:            " + contest.getId());
         System.out.println("Title:         " + contest.getTitle());
-        contest.getDescription().ifPresent(desc -> {
-            System.out.println("Description:   " + desc);
-        });
+        contest.getDescription().ifPresent(desc -> System.out.println("Description:   " + desc));
         contest.getStartTime().ifPresent(time -> System.out.println("Start Time:    " + time.format(DATE_TIME_FORMATTER)));
         contest.getEndTime().ifPresent(time -> System.out.println("End Time:      " + time.format(DATE_TIME_FORMATTER)));
         System.out.println("-----------------------");
