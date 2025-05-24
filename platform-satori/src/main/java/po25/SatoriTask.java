@@ -36,6 +36,7 @@ public class SatoriTask implements Task {
             StringBuilder parsedContentBuilder = new StringBuilder();
             for(Element child: doc.body().getElementsByClass("mainsphinx").first().children()){
                 contentBuilder.append(child.toString()).append("\n");
+                parsedContentBuilder.append(parse(child)).append("\n");
             }
             this.content = contentBuilder.toString();
             this.parsedContent = parsedContentBuilder.toString();
@@ -43,6 +44,19 @@ public class SatoriTask implements Task {
         }catch(Exception e){
             throw new PlatformException(e.getMessage());
         }
+    }
+
+    private String parse(Element element){
+        StringBuilder answer = new StringBuilder();
+        if(element.nodeName().equals("div") || element.nodeName().equals("table")){
+            for(Element child: element.children()){
+                String childText = parse(child);
+                answer.append(childText).append("\n");
+            }
+        }else{
+            answer.append(element.text().replace("\\(", "").replace("\\)", "").replace("\\le", "<="));
+        }
+        return answer.toString();
     }
 
     @Override
@@ -64,7 +78,7 @@ public class SatoriTask implements Task {
                 throw new RuntimeException(e);
             }
         }
-        return this.content;
+        return this.parsedContent;
     }
 
     @Override
