@@ -13,7 +13,7 @@ import java.util.Optional;
 public class SatoriPlatform implements Platform {
     protected String satoriToken;
     private boolean loggedIn = false;
-    protected final String url="https://satori.tcs.uj.edu.pl";
+    protected final String url = "https://satori.tcs.uj.edu.pl";
 
     @Override
     public String getPlatformName() {
@@ -21,8 +21,8 @@ public class SatoriPlatform implements Platform {
     }
 
     @Override
-    public void login(String username, String password) throws PlatformException{
-        try{
+    public void login(String username, String password) throws PlatformException {
+        try {
             Connection.Response res = Jsoup
                     .connect(url + "/login")
                     .data("login", username, "password", password)
@@ -30,48 +30,52 @@ public class SatoriPlatform implements Platform {
                     .execute();
             Map<String, String> cookies = res.cookies();
             satoriToken = cookies.get("satori_token");
-            if(satoriToken == null) throw new PlatformException("Login failed");
+            if (satoriToken == null) throw new PlatformException("Login failed");
             loggedIn = true;
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new PlatformException("Login failed");
         }
     }
 
     @Override
-    public boolean isSessionValid(){
+    public boolean isSessionValid() {
         return this.loggedIn;
     }
 
     @Override
-    public void logout(){
+    public void logout() {
         this.loggedIn = false;
     }
 
     @Override
-    public List<Contest> getAllContests() throws PlatformException{
+    public List<Contest> getAllContests() throws PlatformException {
+        if (!isSessionValid()) {
+            throw new PlatformException("Not logged into Satori. Please login first.");
+        }
+
         List<Contest> contests = new ArrayList<>();
-        try{
+        try {
             Document doc = Jsoup.connect(url + "/contest/select")
                     .cookie("satori_token", satoriToken)
                     .get();
             Element table = doc.select("div[id=content]").select("table").select("tbody").first();
-            for(Element tableRow : table.children()){
-                if(tableRow.child(0).text().equals("Name")) continue;
+            for (Element tableRow : table.children()) {
+                if (tableRow.child(0).text().equals("Name")) continue;
                 String unparsedId = tableRow.child(0).select("a").attr("href");
                 StringBuilder parsedId = new StringBuilder();
-                for(int i=9;i<unparsedId.length()-1;i++){
+                for (int i = 9; i < unparsedId.length() - 1; i++) {
                     parsedId.append(unparsedId.charAt(i));
                 }
                 contests.add(new SatoriContest(parsedId.toString(), tableRow.child(0).text(), tableRow.child(1).text(), this));
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new PlatformException("get all contests failed");
         }
         return contests;
     }
 
     @Override
-    public Optional<Contest> getContestById(String contestId) throws PlatformException{
+    public Optional<Contest> getContestById(String contestId) throws PlatformException {
         return Optional.empty();
     }
 }
