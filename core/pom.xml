@@ -27,5 +27,9 @@
             <artifactId>platform-codeforces</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>po25</groupId>
+            <artifactId>platform-satori</artifactId>
+        </dependency>
     </dependencies>
 </project>
