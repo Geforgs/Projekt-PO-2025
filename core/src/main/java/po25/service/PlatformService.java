@@ -32,17 +32,12 @@ public class PlatformService {
         }
 
         // try {
-        //     Platform satori = new SatoriPlatform(); // Assumes SatoriPlatform implements po25.Platform
+        //     Platform satori = new SatoriPlatform();
         //     registeredPlatforms.put(satori.getPlatformName().toLowerCase(), satori);
         // } catch (Exception e) {
         //     System.err.println("Error initializing Satori platform: " + e.getMessage());
         // }
 
-//        if (registeredPlatforms.isEmpty()) {
-//            System.err.println("Warning: No platforms were registered in PlatformService.");
-//        } else {
-//            System.out.println("PlatformService initialized. Registered platforms: " + registeredPlatforms.keySet());
-//        }
     }
 
     /**

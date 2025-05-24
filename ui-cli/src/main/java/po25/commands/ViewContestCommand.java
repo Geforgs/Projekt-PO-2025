@@ -2,7 +2,6 @@ package po25.commands;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Parameters;
 import po25.Contest;
 import po25.PlatformException;
 import po25.Task;
@@ -17,7 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 
 @Command(name = "view-contest",
-        aliases = {"vc", "show-contest"},
+        aliases = {"vc", "lt"},
         description = "Views details of a specific contest, including its tasks, from a platform.",
         mixinStandardHelpOptions = true)
 public class ViewContestCommand implements Callable<Integer> {
@@ -62,9 +61,7 @@ public class ViewContestCommand implements Callable<Integer> {
         System.out.println("\n--- Contest Details ---");
         System.out.println("ID:            " + contest.getId());
         System.out.println("Title:         " + contest.getTitle());
-        contest.getDescription().ifPresent(desc -> {
-            System.out.println("Description:   " + desc);
-        });
+        contest.getDescription().ifPresent(desc -> System.out.println("Description:   " + desc));
         contest.getStartTime().ifPresent(time -> System.out.println("Start Time:    " + time.format(DATE_TIME_FORMATTER)));
         contest.getEndTime().ifPresent(time -> System.out.println("End Time:      " + time.format(DATE_TIME_FORMATTER)));
         System.out.println("-----------------------");

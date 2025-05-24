@@ -14,7 +14,7 @@ class CfContest implements Contest {
     private final LocalDateTime start;
     private final LocalDateTime end;
     private final CodeforcesPlatform platform;
-    // cache
+
     private List<Task> tasks = null;
 
     CfContest(long id, String title,
@@ -23,7 +23,6 @@ class CfContest implements Contest {
               CodeforcesPlatform platform) {
         this.id = id;
         this.title = title;
-        // konwertujemy na LocalDateTime
         this.start = startZdt.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
         this.end   = endZdt.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
         this.platform = platform;

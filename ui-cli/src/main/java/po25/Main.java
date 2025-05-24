@@ -14,16 +14,15 @@ import java.util.concurrent.Callable;
         subcommands = {
                 ListContestsCommand.class,
                 ViewContestCommand.class,
-                ListTasksCommand.class,
                 ViewTaskCommand.class,
-                SubmitCommand.class,
-                StatusCommand.class,
-                HistoryCommand.class
+//                SubmitCommand.class,
+//                StatusCommand.class,
+//                HistoryCommand.class
         })
 
 public class Main implements Callable<Integer> {
     @Override
-    public Integer call() throws Exception {
+    public Integer call() {
         System.out.println("Welcome to Desktop Client for Competitive Programming Platforms!");
         System.out.println("Use 'dccp <command> --help' for more information on a specific command.");
 //         new CommandLine(this).usage(System.out);

@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 
 @Command(name = "view-task",
-        aliases = {"vt", "show-task"},
+        aliases = {"vt"},
         description = "Views a specific task in contest and optionally saves it.",
         mixinStandardHelpOptions = true)
 public class ViewTaskCommand implements Callable<Integer> {
