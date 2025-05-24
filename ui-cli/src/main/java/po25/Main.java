@@ -16,9 +16,9 @@ import java.util.concurrent.Callable;
                 ViewContestCommand.class,
                 ListTasksCommand.class,
                 ViewTaskCommand.class,
-                SubmitCommand.class,
-                StatusCommand.class,
-                HistoryCommand.class
+//                SubmitCommand.class,
+//                StatusCommand.class,
+//                HistoryCommand.class
         })
 
 public class Main implements Callable<Integer> {

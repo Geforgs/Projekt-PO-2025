@@ -24,7 +24,7 @@ public interface Platform {
      * @param username username.
      * @param password user's password.
      */
-    void login(String username, String password) throws PlatformException; // Rozważ dedykowany wyjątek
+    void login(String username, String password) throws PlatformException;
 
     /**
      * Checks if the current user session is still active/valid.

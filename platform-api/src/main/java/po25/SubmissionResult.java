@@ -10,11 +10,15 @@ public interface SubmissionResult {
 
     Optional<String> getContestId();
 
-    String getVerdict(); // e.g., "Accepted", "Wrong Answer", "Time Limit Exceeded", "Compiling", "Running"
+    // TODO:
+    // getVerdict() String -> enum
+    // getMemory and getExeTime -> special data type
 
-    Optional<String> getExecutionTime(); // e.g., "123 ms"
+    String getVerdict();
 
-    Optional<String> getMemoryUsed();    // e.g., "16 MB"
+    Optional<String> getExecutionTime(); // "123 ms"
+
+    Optional<String> getMemoryUsed();    // "16 MB"
 
     Optional<LocalDateTime> getSubmittedAt();
 

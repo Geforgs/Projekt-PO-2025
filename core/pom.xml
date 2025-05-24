@@ -14,7 +14,6 @@
     <artifactId>core</artifactId>
     <packaging>jar</packaging>
     <name>Core Logic Module</name>
-    <description>Core business logic and service layer for the DCCP.</description>
 
     <dependencies>
         <dependency>

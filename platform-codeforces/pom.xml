@@ -35,7 +35,6 @@
 
     <build>
         <plugins>
-            <!-- Dzięki temu możesz uruchomić: mvn exec:java -Dexec.mainClass=po25.Main -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>

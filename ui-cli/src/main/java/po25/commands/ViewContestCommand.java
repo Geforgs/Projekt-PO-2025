@@ -2,7 +2,6 @@ package po25.commands;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Parameters;
 import po25.Contest;
 import po25.PlatformException;
 import po25.Task;

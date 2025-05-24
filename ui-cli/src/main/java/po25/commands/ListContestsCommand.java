@@ -81,13 +81,11 @@ public class ListContestsCommand implements Callable<Integer> {
 
             String startTimeStr = contest.getStartTime().map(t -> t.format(DATE_TIME_FORMATTER)).orElse("N/A");
             String endTimeStr = contest.getEndTime().map(t -> t.format(DATE_TIME_FORMATTER)).orElse("N/A");
+
             /**
              * TODO:
              * Contest -> getDescritption() method something is wrong
              */
-            //String descriptionExcerpt = contest.getDescription()
-            //        .map(d -> d.length() > 30 ? d.substring(0, 27) + "..." : d)
-            //        .orElse("N/A");
 
             System.out.printf("%-20s | %-40s | %-20s | %-20s%n",
                     contest.getId(),
