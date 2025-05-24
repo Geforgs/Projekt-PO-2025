@@ -14,6 +14,8 @@ public class SatoriTask implements Task {
     private final String url;
     private final SatoriContest contest;
     private boolean loaded;
+    private String content;
+    private String parsedContent;
 
     SatoriTask(String id, String code, String name, String url, SatoriContest contest) {
         this.id = id;
@@ -22,21 +24,22 @@ public class SatoriTask implements Task {
         this.url = url;
         this.contest = contest;
         loaded = false;
-        try{
-            this.load();
-        }catch(Exception e){
-            e.printStackTrace();
-        }
     }
 
     private void load() throws PlatformException {
         try{
+            this.loaded = false;
             Document doc = Jsoup.connect(this.url)
                     .cookie("satori_token", this.contest.satori.satoriToken)
                     .get();
+            StringBuilder contentBuilder = new StringBuilder();
+            StringBuilder parsedContentBuilder = new StringBuilder();
             for(Element child: doc.body().getElementsByClass("mainsphinx").first().children()){
-                System.out.println(child);
+                contentBuilder.append(child.toString()).append("\n");
             }
+            this.content = contentBuilder.toString();
+            this.parsedContent = parsedContentBuilder.toString();
+            this.loaded = true;
         }catch(Exception e){
             throw new PlatformException(e.getMessage());
         }
@@ -53,8 +56,15 @@ public class SatoriTask implements Task {
     }
 
     @Override
-    public String getContent() {
-        return "";
+    public String getContent()  {
+        if(!this.loaded){
+            try{
+                this.load();
+            }catch (PlatformException e){
+                throw new RuntimeException(e);
+            }
+        }
+        return this.content;
     }
 
     @Override
