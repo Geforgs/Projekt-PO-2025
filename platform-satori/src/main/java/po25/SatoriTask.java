@@ -3,7 +3,6 @@ package po25;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.util.Optional;
 
@@ -32,13 +31,11 @@ public class SatoriTask implements Task {
             Document doc = Jsoup.connect(this.url)
                     .cookie("satori_token", this.contest.satori.satoriToken)
                     .get();
-            StringBuilder contentBuilder = new StringBuilder();
+            this.content = doc.body().getElementsByClass("mainsphinx").first().toString();
             StringBuilder parsedContentBuilder = new StringBuilder();
             for(Element child: doc.body().getElementsByClass("mainsphinx").first().children()){
-                contentBuilder.append(child.toString()).append("\n");
-                parsedContentBuilder.append(parse(child)).append("\n");
+                parsedContentBuilder.append(parse(child));
             }
-            this.content = contentBuilder.toString();
             this.parsedContent = parsedContentBuilder.toString();
             this.loaded = true;
         }catch(Exception e){
@@ -51,10 +48,11 @@ public class SatoriTask implements Task {
         if(element.nodeName().equals("div") || element.nodeName().equals("table")){
             for(Element child: element.children()){
                 String childText = parse(child);
-                answer.append(childText).append("\n");
+                answer.append(childText);
             }
         }else{
             answer.append(element.text().replace("\\(", "").replace("\\)", "").replace("\\le", "<="));
+            answer.append("\n");
         }
         return answer.toString();
     }
@@ -79,6 +77,17 @@ public class SatoriTask implements Task {
             }
         }
         return this.parsedContent;
+    }
+
+    public String getUnparsedContent() {
+        if(!this.loaded){
+            try{
+                this.load();
+            }catch (PlatformException e){
+                throw new RuntimeException(e);
+            }
+        }
+        return this.content;
     }
 
     @Override
