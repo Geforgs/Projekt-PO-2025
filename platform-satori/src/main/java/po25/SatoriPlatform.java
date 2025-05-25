@@ -14,6 +14,8 @@ public class SatoriPlatform implements Platform {
     protected String satoriToken;
     private boolean loggedIn = false;
     protected final String url="https://satori.tcs.uj.edu.pl";
+    private List<Contest> contests;
+    private boolean loaded = false;
 
     @Override
     public String getPlatformName() {
@@ -47,10 +49,10 @@ public class SatoriPlatform implements Platform {
         this.loggedIn = false;
     }
 
-    @Override
-    public List<Contest> getAllContests() throws PlatformException{
-        List<Contest> contests = new ArrayList<>();
+    private void loadContests() throws PlatformException {
         try{
+            this.loaded = false;
+            contests = new ArrayList<>();
             Document doc = Jsoup.connect(url + "/contest/select")
                     .cookie("satori_token", satoriToken)
                     .get();
@@ -64,9 +66,19 @@ public class SatoriPlatform implements Platform {
                 }
                 contests.add(new SatoriContest(parsedId.toString(), tableRow.child(0).text(), tableRow.child(1).text(), this));
             }
+            this.loaded = true;
         }catch (Exception e){
             throw new PlatformException("get all contests failed");
         }
+    }
+
+    public void reloadContests() throws PlatformException {
+        this.loadContests();
+    }
+
+    @Override
+    public List<Contest> getAllContests() throws PlatformException{
+        if(!loaded) loadContests();
         return contests;
     }
 
