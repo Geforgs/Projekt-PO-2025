@@ -81,7 +81,7 @@ public class CodeforcesPlatform implements Platform {
     @Override
     public Optional<Contest> getContestById(String contestId) throws PlatformException {
         return getAllContests().stream()
-                .filter(c -> ((CfContest)c).getId() == contestId)
+                .filter(c -> c.getId().equals(contestId))
                 .findFirst();
     }
 

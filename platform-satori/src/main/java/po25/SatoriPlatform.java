@@ -72,6 +72,8 @@ public class SatoriPlatform implements Platform {
 
     @Override
     public Optional<Contest> getContestById(String contestId) throws PlatformException{
-        return Optional.empty();
+        return getAllContests().stream()
+                .filter(c -> c.getId().equals(contestId))
+                .findFirst();
     }
 }
