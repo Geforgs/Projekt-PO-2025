@@ -1,9 +1,15 @@
 package po25;
 
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 public class SatoriTask implements Task {
@@ -11,7 +17,7 @@ public class SatoriTask implements Task {
     private final String code;
     private final String name;
     private final String url;
-    private final SatoriContest contest;
+    protected final SatoriContest contest;
     private boolean loaded;
     private String content;
     private String parsedContent;
@@ -64,7 +70,7 @@ public class SatoriTask implements Task {
 
     @Override
     public String getName() {
-        return this.code + " " + this.name;
+        return this.code + ": " + this.name;
     }
 
     @Override
@@ -108,5 +114,24 @@ public class SatoriTask implements Task {
     @Override
     public Optional<String> getMemoryLimit() {
         return Optional.empty();
+    }
+
+    public Submission submit(String path) throws PlatformException {
+        try{
+            File code = new File(path);
+            Connection.Response res = Jsoup
+                    .connect(this.contest.url + "/" + this.contest.contestId + "/submit")
+                    .cookie("satori_token", this.contest.satori.satoriToken)
+                    .data("problem", this.getId())
+                    .data("codefile", code.getAbsolutePath(), Files.newInputStream(code.toPath()))
+                    .method(Connection.Method.POST)
+                    .execute();
+            Document doc = res.parse();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime time = LocalDateTime.parse(doc.select("table").select("tr").get(1).children().get(2).text(), formatter);
+            return new SatoriSubmission(this, doc.select("table").select("tr").get(1).children().get(0).text(), time);
+        }catch (Exception e){
+            throw new PlatformException(e.getMessage());
+        }
     }
 }

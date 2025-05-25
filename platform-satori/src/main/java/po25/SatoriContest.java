@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class SatoriContest implements Contest {
-    private final String url="https://satori.tcs.uj.edu.pl/contest";
-    private final String contestId;
+    protected final String url="https://satori.tcs.uj.edu.pl/contest";
+    protected final String contestId;
     private final String title;
     protected final SatoriPlatform satori;
     private final String description;
