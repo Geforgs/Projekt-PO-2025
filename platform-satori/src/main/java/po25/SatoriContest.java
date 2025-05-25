@@ -16,6 +16,8 @@ public class SatoriContest implements Contest {
     private final String title;
     protected final SatoriPlatform satori;
     private final String description;
+    private List<Task> tasks;
+    private boolean loaded = false;
 
     protected SatoriContest(String contestId, String title, String description, SatoriPlatform satori) {
         this.contestId = contestId;
@@ -34,10 +36,10 @@ public class SatoriContest implements Contest {
         return this.title;
     }
 
-    @Override
-    public List<Task> getTasks() throws PlatformException {
-        List<Task> tasks = new ArrayList<>();
+    private void loadTasks() throws PlatformException {
         try{
+            this.loaded = false;
+            tasks = new ArrayList<>();
             Document doc = Jsoup.connect(this.url + "/" + this.contestId + "/problems")
                     .cookie("satori_token", this.satori.satoriToken)
                     .get();
@@ -48,9 +50,19 @@ public class SatoriContest implements Contest {
                     tasks.add(new SatoriTask(problem.select("a").first().attr("href").split("/")[4], problem.child(0).text(), problem.child(1).text(), this.satori.url + problem.select("a").first().attr("href"), this));
                 }
             }
+            this.loaded = true;
         }catch(Exception e){
             throw new PlatformException(e.getMessage());
         }
+    }
+
+    public void reloadTasks() throws PlatformException {
+        this.loadTasks();
+    }
+
+    @Override
+    public List<Task> getTasks() throws PlatformException {
+        if(!loaded) loadTasks();
         return tasks;
     }
 
@@ -61,7 +73,9 @@ public class SatoriContest implements Contest {
 
     @Override
     public Optional<Task> getTaskById(String taskId) throws PlatformException {
-        return Optional.empty();
+        return getTasks().stream()
+                .filter(t -> t.getId().equals(taskId))
+                .findFirst();
     }
 
     @Override
@@ -72,5 +86,10 @@ public class SatoriContest implements Contest {
     @Override
     public Optional<LocalDateTime> getEndTime() {
         return Optional.empty();
+    }
+
+    @Override
+    public String toString() {
+        return this.title;
     }
 }
