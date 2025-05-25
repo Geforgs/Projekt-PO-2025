@@ -57,7 +57,7 @@ public class CodeforcesPlatform implements Platform {
             List<Contest> list = new ArrayList<>();
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject c = arr.getJSONObject(i);
-                String id       = c.getString("id");
+                String id       = Long.toString(c.getLong("id"));
                 String name   = c.getString("name");
                 String phase  = c.getString("phase");
                 long startSec = c.getLong("startTimeSeconds");
