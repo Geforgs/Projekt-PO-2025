@@ -88,4 +88,16 @@ public class SatoriPlatform implements Platform {
                 .filter(c -> c.getId().equals(contestId))
                 .findFirst();
     }
+
+    Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
+        return ((SatoriTask) task).submit(path);
+    }
+
+    Submission getSubmissionStatus(String submissionId) throws PlatformException{
+        return null;
+    }
+
+    List<Submission> getSubmissionHistory(Task task) throws PlatformException{
+        return null;
+    }
 }
