@@ -14,8 +14,9 @@ public class SatoriContest implements Contest {
     private final String title;
     protected final SatoriPlatform satori;
     private final String description;
-    private Map<String, Task> tasks;
-    private boolean loaded = false;
+    private Map<String, SatoriTask> tasks;
+    private boolean loaded;
+    private boolean loadedSubmissions;
     private Map<String, SatoriSubmission> submissions;
 
     protected SatoriContest(String contestId, String title, String description, SatoriPlatform satori) {
@@ -23,6 +24,8 @@ public class SatoriContest implements Contest {
         this.title = title;
         this.satori = satori;
         this.description = description;
+        this.loaded = false;
+        this.loadedSubmissions = false;
     }
 
     @Override
@@ -35,32 +38,9 @@ public class SatoriContest implements Contest {
         return this.title;
     }
 
-    private void loadTasks() throws PlatformException {
-        try{
-            this.loaded = false;
-            tasks = new HashMap<>();
-            submissions = new HashMap<>();
-            Document doc = Jsoup.connect(this.url + "/" + this.contestId + "/problems")
-                    .cookie("satori_token", this.satori.satoriToken)
-                    .get();
-            Elements tables = doc.select("tbody");
-            for(Element table : tables) {
-                for(Element problem: table.children()) {
-                    if((problem.child(0).text().equals("Code"))) continue;
-                    tasks.put(problem.select("a").first().attr("href").split("/")[4], new SatoriTask(problem.select("a").first().attr("href").split("/")[4], problem.child(0).text(), problem.child(1).text(), this.satori.url + problem.select("a").first().attr("href"), this));
-                    for(Submission submission: ((SatoriTask) tasks.get(problem.select("a").first().attr("href").split("/")[4])).getSubmissionHistory()) {
-                        submissions.put(((SatoriSubmission) submission).getId(), (SatoriSubmission) submission);
-                    }
-                }
-            }
-            this.loaded = true;
-        }catch(Exception e){
-            throw new PlatformException(e.getMessage());
-        }
-    }
-
-    public void reloadTasks() throws PlatformException {
+    public void reload() throws PlatformException {
         this.loadTasks();
+        this.loadSubmissions();
     }
 
     @Override
@@ -97,7 +77,43 @@ public class SatoriContest implements Contest {
     }
 
     public List<Submission> getSubmissionHistory() throws PlatformException {
-        if(!loaded) loadTasks();
+        if(!loadedSubmissions) loadSubmissions();
         return new ArrayList<>(submissions.values());
+    }
+
+    private void loadTasks() throws PlatformException {
+        try{
+            this.loaded = false;
+            tasks = new HashMap<>();
+            Document doc = Jsoup.connect(this.url + "/" + this.contestId + "/problems")
+                    .cookie("satori_token", this.satori.satoriToken)
+                    .get();
+            Elements tables = doc.select("tbody");
+            for(Element table : tables) {
+                for(Element problem: table.children()) {
+                    if((problem.child(0).text().equals("Code"))) continue;
+                    tasks.put(problem.select("a").first().attr("href").split("/")[4], new SatoriTask(problem.select("a").first().attr("href").split("/")[4], problem.child(0).text(), problem.child(1).text(), this.satori.url + problem.select("a").first().attr("href"), this));
+                }
+            }
+            this.loaded = true;
+        }catch(Exception e){
+            throw new PlatformException(e.getMessage());
+        }
+    }
+
+    private void loadSubmissions() throws PlatformException {
+        try{
+            if(!this.loaded) this.loadTasks();
+            this.loadedSubmissions = false;
+            submissions = new HashMap<>();
+            for(SatoriTask task: tasks.values()) {
+                for(Submission submission: task.getSubmissionHistory()) {
+                    submissions.put(((SatoriSubmission) submission).getId(), (SatoriSubmission) submission);
+                }
+            }
+            this.loadedSubmissions = true;
+        }catch(Exception e){
+            throw new PlatformException(e.getMessage());
+        }
     }
 }

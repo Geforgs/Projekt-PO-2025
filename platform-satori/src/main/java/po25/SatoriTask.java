@@ -7,7 +7,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,7 +22,8 @@ public class SatoriTask implements Task {
     private boolean loadedSubmissions;
     private String content;
     private String parsedContent;
-    private Map<String, Submission> submissions;
+    private Map<String, SatoriSubmission> submissions;
+    private String css;
 
     SatoriTask(String id, String code, String name, String url, SatoriContest contest) {
         this.id = id;
@@ -41,6 +41,16 @@ public class SatoriTask implements Task {
             Document doc = Jsoup.connect(this.url)
                     .cookie("satori_token", this.contest.satori.satoriToken)
                     .get();
+            StringBuilder cssBuilder = new StringBuilder();
+            for(Element link: doc.select("link")){
+                if(link.attr("rel").equals("stylesheet")){
+                    Document cssBody = Jsoup.connect(this.contest.satori.url + link.attr("href"))
+                            .cookie("satori_token", this.contest.satori.satoriToken)
+                            .get();
+                    cssBuilder.append(cssBody.body().text()).append('\n');
+                }
+            }
+            this.css = cssBuilder.toString();
             this.content = doc.body().getElementsByClass("mainsphinx").first().toString();
             StringBuilder parsedContentBuilder = new StringBuilder();
             for(Element child: doc.body().getElementsByClass("mainsphinx").first().children()){
@@ -65,6 +75,11 @@ public class SatoriTask implements Task {
             answer.append("\n");
         }
         return answer.toString();
+    }
+
+    public String getCss() throws PlatformException {
+        if(!loaded) this.load();
+        return this.css;
     }
 
     @Override

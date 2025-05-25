@@ -13,6 +13,7 @@ public class SatoriPlatform implements Platform {
     protected final String url="https://satori.tcs.uj.edu.pl";
     private Map<String, SatoriContest> contests;
     private boolean loaded = false;
+    private boolean loadedSubmissions = false;
     private Map<String, SatoriSubmission> submissions;
 
     @Override
@@ -51,7 +52,6 @@ public class SatoriPlatform implements Platform {
         try{
             this.loaded = false;
             contests = new HashMap<>();
-            submissions = new HashMap<>();
             Document doc = Jsoup.connect(url + "/contest/select")
                     .cookie("satori_token", satoriToken)
                     .get();
@@ -64,9 +64,6 @@ public class SatoriPlatform implements Platform {
                     parsedId.append(unparsedId.charAt(i));
                 }
                 contests.put(parsedId.toString(), new SatoriContest(parsedId.toString(), tableRow.child(0).text(), tableRow.child(1).text(), this));
-                for(Submission submission: contests.get(parsedId.toString()).getSubmissionHistory()){
-                    submissions.put(((SatoriSubmission) submission).getId(), (SatoriSubmission) submission);
-                }
             }
             this.loaded = true;
         }catch (Exception e){
@@ -74,8 +71,25 @@ public class SatoriPlatform implements Platform {
         }
     }
 
-    public void reloadContests() throws PlatformException {
+    private void loadSubmissions() throws PlatformException {
+        try{
+            if(!this.loaded) loadContests();
+            this.loadedSubmissions = false;
+            submissions = new HashMap<>();
+            for(SatoriContest contest: contests.values()){
+                for(Submission submission: contest.getSubmissionHistory()){
+                    submissions.put(((SatoriSubmission) submission).getId(), (SatoriSubmission) submission);
+                }
+            }
+            this.loadedSubmissions = true;
+        }catch (Exception e){
+            throw new PlatformException("get all contests failed");
+        }
+    }
+
+    public void reload() throws PlatformException {
         this.loadContests();
+        this.loadSubmissions();
     }
 
     @Override
@@ -95,12 +109,12 @@ public class SatoriPlatform implements Platform {
     }
 
     Submission getSubmission(String submissionId) throws PlatformException{
-        if(!loaded) loadContests();
+        if(!loadedSubmissions) loadSubmissions();
         return this.submissions.get(submissionId);
     }
 
     List<Submission> getSubmissionHistory() throws PlatformException{
-        if(!loaded) loadContests();
+        if(!loadedSubmissions) loadSubmissions();
         return new ArrayList<>(submissions.values());
     }
 }
