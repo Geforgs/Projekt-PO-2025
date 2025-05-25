@@ -4,13 +4,14 @@ import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
+import java.util.*;
 
 public class SatoriTask implements Task {
     private final String id;
@@ -19,8 +20,10 @@ public class SatoriTask implements Task {
     private final String url;
     protected final SatoriContest contest;
     private boolean loaded;
+    private boolean loadedSubmissions;
     private String content;
     private String parsedContent;
+    private Map<String, Submission> submissions;
 
     SatoriTask(String id, String code, String name, String url, SatoriContest contest) {
         this.id = id;
@@ -29,6 +32,7 @@ public class SatoriTask implements Task {
         this.url = url;
         this.contest = contest;
         loaded = false;
+        loadedSubmissions = false;
     }
 
     private void load() throws PlatformException {
@@ -71,6 +75,10 @@ public class SatoriTask implements Task {
     @Override
     public String getName() {
         return this.code + ": " + this.name;
+    }
+
+    protected String getCode(){
+        return this.code;
     }
 
     @Override
@@ -133,5 +141,34 @@ public class SatoriTask implements Task {
         }catch (Exception e){
             throw new PlatformException(e.getMessage());
         }
+    }
+
+    public List<Submission> getSubmissionHistory() throws PlatformException {
+        if(!loadedSubmissions) loadSubmissions();
+        return new ArrayList<>(submissions.values());
+    }
+
+    private void loadSubmissions() throws PlatformException {
+        try{
+            this.loadedSubmissions = false;
+            submissions = new HashMap<>();
+            Document doc = Jsoup.connect(this.contest.url + "/" + this.contest.contestId + "/results?results_limit=2000000000&results_filter_problem=" + this.id)
+                    .cookie("satori_token", this.contest.satori.satoriToken)
+                    .get();
+            Elements result = doc.select("table").select("tr");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            for(int i=1;i<result.size();i++){
+                LocalDateTime time = LocalDateTime.parse(result.get(i).children().get(2).text(), formatter);
+                submissions.put(result.get(i).children().get(0).text(), new SatoriSubmission(this, result.get(i).children().get(0).text(), time));
+            }
+            this.loadedSubmissions = true;
+        }catch(Exception e){
+            throw new PlatformException(e.getMessage());
+        }
+    }
+
+    public void reload() throws PlatformException {
+        this.load();
+        this.loadSubmissions();
     }
 }

@@ -6,9 +6,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class SatoriContest implements Contest {
     protected final String url="https://satori.tcs.uj.edu.pl/contest";
@@ -16,8 +14,9 @@ public class SatoriContest implements Contest {
     private final String title;
     protected final SatoriPlatform satori;
     private final String description;
-    private List<Task> tasks;
+    private Map<String, Task> tasks;
     private boolean loaded = false;
+    private Map<String, SatoriSubmission> submissions;
 
     protected SatoriContest(String contestId, String title, String description, SatoriPlatform satori) {
         this.contestId = contestId;
@@ -39,7 +38,8 @@ public class SatoriContest implements Contest {
     private void loadTasks() throws PlatformException {
         try{
             this.loaded = false;
-            tasks = new ArrayList<>();
+            tasks = new HashMap<>();
+            submissions = new HashMap<>();
             Document doc = Jsoup.connect(this.url + "/" + this.contestId + "/problems")
                     .cookie("satori_token", this.satori.satoriToken)
                     .get();
@@ -47,7 +47,10 @@ public class SatoriContest implements Contest {
             for(Element table : tables) {
                 for(Element problem: table.children()) {
                     if((problem.child(0).text().equals("Code"))) continue;
-                    tasks.add(new SatoriTask(problem.select("a").first().attr("href").split("/")[4], problem.child(0).text(), problem.child(1).text(), this.satori.url + problem.select("a").first().attr("href"), this));
+                    tasks.put(problem.select("a").first().attr("href").split("/")[4], new SatoriTask(problem.select("a").first().attr("href").split("/")[4], problem.child(0).text(), problem.child(1).text(), this.satori.url + problem.select("a").first().attr("href"), this));
+                    for(Submission submission: ((SatoriTask) tasks.get(problem.select("a").first().attr("href").split("/")[4])).getSubmissionHistory()) {
+                        submissions.put(((SatoriSubmission) submission).getId(), (SatoriSubmission) submission);
+                    }
                 }
             }
             this.loaded = true;
@@ -63,7 +66,7 @@ public class SatoriContest implements Contest {
     @Override
     public List<Task> getTasks() throws PlatformException {
         if(!loaded) loadTasks();
-        return tasks;
+        return new ArrayList<>(tasks.values());
     }
 
     @Override
@@ -91,5 +94,10 @@ public class SatoriContest implements Contest {
     @Override
     public String toString() {
         return this.title;
+    }
+
+    public List<Submission> getSubmissionHistory() throws PlatformException {
+        if(!loaded) loadTasks();
+        return new ArrayList<>(submissions.values());
     }
 }

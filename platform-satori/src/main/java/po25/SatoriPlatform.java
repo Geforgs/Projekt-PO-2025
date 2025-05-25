@@ -5,17 +5,15 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class SatoriPlatform implements Platform {
     protected String satoriToken;
     private boolean loggedIn = false;
     protected final String url="https://satori.tcs.uj.edu.pl";
-    private List<Contest> contests;
+    private Map<String, SatoriContest> contests;
     private boolean loaded = false;
+    private Map<String, SatoriSubmission> submissions;
 
     @Override
     public String getPlatformName() {
@@ -52,7 +50,8 @@ public class SatoriPlatform implements Platform {
     private void loadContests() throws PlatformException {
         try{
             this.loaded = false;
-            contests = new ArrayList<>();
+            contests = new HashMap<>();
+            submissions = new HashMap<>();
             Document doc = Jsoup.connect(url + "/contest/select")
                     .cookie("satori_token", satoriToken)
                     .get();
@@ -64,7 +63,10 @@ public class SatoriPlatform implements Platform {
                 for(int i=9;i<unparsedId.length()-1;i++){
                     parsedId.append(unparsedId.charAt(i));
                 }
-                contests.add(new SatoriContest(parsedId.toString(), tableRow.child(0).text(), tableRow.child(1).text(), this));
+                contests.put(parsedId.toString(), new SatoriContest(parsedId.toString(), tableRow.child(0).text(), tableRow.child(1).text(), this));
+                for(Submission submission: contests.get(parsedId.toString()).getSubmissionHistory()){
+                    submissions.put(((SatoriSubmission) submission).getId(), (SatoriSubmission) submission);
+                }
             }
             this.loaded = true;
         }catch (Exception e){
@@ -79,25 +81,26 @@ public class SatoriPlatform implements Platform {
     @Override
     public List<Contest> getAllContests() throws PlatformException{
         if(!loaded) loadContests();
-        return contests;
+        return new ArrayList<>(contests.values());
     }
 
     @Override
     public Optional<Contest> getContestById(String contestId) throws PlatformException{
-        return getAllContests().stream()
-                .filter(c -> c.getId().equals(contestId))
-                .findFirst();
+        if(!loaded) loadContests();
+        return Optional.of(contests.get(contestId));
     }
 
     Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
         return ((SatoriTask) task).submit(path);
     }
 
-    Submission getSubmissionStatus(String submissionId) throws PlatformException{
-        return null;
+    Submission getSubmission(String submissionId) throws PlatformException{
+        if(!loaded) loadContests();
+        return this.submissions.get(submissionId);
     }
 
-    List<Submission> getSubmissionHistory(Task task) throws PlatformException{
-        return null;
+    List<Submission> getSubmissionHistory() throws PlatformException{
+        if(!loaded) loadContests();
+        return new ArrayList<>(submissions.values());
     }
 }
