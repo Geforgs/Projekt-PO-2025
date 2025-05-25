@@ -25,8 +25,8 @@ public class SatoriContest implements Contest {
     }
 
     @Override
-    public long getId() {
-        return 0;
+    public String getId() {
+        return this.contestId;
     }
 
     @Override

@@ -14,7 +14,7 @@ public interface Contest {
      *
      * @return The unique identifier of the contest (e.g., "1742", "Div2RoundXYZ").
      */
-    long getId();
+    String getId();
 
     /**
      * Returns the title of the contest.

@@ -57,7 +57,7 @@ public class CodeforcesPlatform implements Platform {
             List<Contest> list = new ArrayList<>();
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject c = arr.getJSONObject(i);
-                long id       = c.getLong("id");
+                String id       = c.getString("id");
                 String name   = c.getString("name");
                 String phase  = c.getString("phase");
                 long startSec = c.getLong("startTimeSeconds");
@@ -80,14 +80,8 @@ public class CodeforcesPlatform implements Platform {
 
     @Override
     public Optional<Contest> getContestById(String contestId) throws PlatformException {
-        long id;
-        try {
-            id = Long.parseLong(contestId);
-        } catch (NumberFormatException e) {
-            return Optional.empty();
-        }
         return getAllContests().stream()
-                .filter(c -> ((CfContest)c).getId() == id)
+                .filter(c -> ((CfContest)c).getId() == contestId)
                 .findFirst();
     }
 

@@ -9,7 +9,7 @@ import java.util.Optional;
  * Implementacja interfejsu Contest dla Codeforces.
  */
 class CfContest implements Contest {
-    private final long id;
+    private final String id;
     private final String title;
     private final LocalDateTime start;
     private final LocalDateTime end;
@@ -17,7 +17,7 @@ class CfContest implements Contest {
 
     private List<Task> tasks = null;
 
-    CfContest(long id, String title,
+    CfContest(String id, String title,
               java.time.ZonedDateTime startZdt,
               java.time.ZonedDateTime endZdt,
               CodeforcesPlatform platform) {
@@ -28,7 +28,7 @@ class CfContest implements Contest {
         this.platform = platform;
     }
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
