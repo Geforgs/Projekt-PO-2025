@@ -33,6 +33,7 @@ public class SatoriTask implements Task {
         this.contest = contest;
         loaded = false;
         loadedSubmissions = false;
+        submissions = new HashMap<>();
     }
 
     private void load() throws PlatformException {
@@ -163,19 +164,25 @@ public class SatoriTask implements Task {
         return new ArrayList<>(submissions.values());
     }
 
-    private void loadSubmissions() throws PlatformException {
+    protected void loadSubmissions() throws PlatformException {
         try{
             this.loadedSubmissions = false;
-            submissions = new HashMap<>();
+            Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
             Document doc = Jsoup.connect(this.contest.url + "/" + this.contest.contestId + "/results?results_limit=2000000000&results_filter_problem=" + this.id)
                     .cookie("satori_token", this.contest.satori.satoriToken)
                     .get();
             Elements result = doc.select("table").select("tr");
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             for(int i=1;i<result.size();i++){
-                LocalDateTime time = LocalDateTime.parse(result.get(i).children().get(2).text(), formatter);
-                submissions.put(result.get(i).children().get(0).text(), new SatoriSubmission(this, result.get(i).children().get(0).text(), time));
+                String submissionId = result.get(i).children().get(0).text();
+                if(!submissions.containsKey(submissionId)){
+                    LocalDateTime time = LocalDateTime.parse(result.get(i).children().get(2).text(), formatter);
+                    newSubmissions.put(submissionId, new SatoriSubmission(this, submissionId, time));
+                }else{
+                    newSubmissions.put(submissionId, submissions.get(submissionId));
+                }
             }
+            submissions = newSubmissions;
             this.loadedSubmissions = true;
         }catch(Exception e){
             throw new PlatformException(e.getMessage());

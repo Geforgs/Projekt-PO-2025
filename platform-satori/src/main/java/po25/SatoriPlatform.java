@@ -11,10 +11,10 @@ public class SatoriPlatform implements Platform {
     protected String satoriToken;
     private boolean loggedIn = false;
     protected final String url="https://satori.tcs.uj.edu.pl";
-    private Map<String, SatoriContest> contests;
+    private Map<String, SatoriContest> contests = new HashMap<>();
     private boolean loaded = false;
     private boolean loadedSubmissions = false;
-    private Map<String, SatoriSubmission> submissions;
+    private Map<String, SatoriSubmission> submissions = new HashMap<>();
 
     @Override
     public String getPlatformName() {
@@ -51,7 +51,7 @@ public class SatoriPlatform implements Platform {
     private void loadContests() throws PlatformException {
         try{
             this.loaded = false;
-            contests = new HashMap<>();
+            Map<String, SatoriContest> newContests = new HashMap<>();
             Document doc = Jsoup.connect(url + "/contest/select")
                     .cookie("satori_token", satoriToken)
                     .get();
@@ -63,8 +63,14 @@ public class SatoriPlatform implements Platform {
                 for(int i=9;i<unparsedId.length()-1;i++){
                     parsedId.append(unparsedId.charAt(i));
                 }
-                contests.put(parsedId.toString(), new SatoriContest(parsedId.toString(), tableRow.child(0).text(), tableRow.child(1).text(), this));
+                String contestId = parsedId.toString();
+                if(!contests.containsKey(contestId)){
+                    newContests.put(contestId, new SatoriContest(contestId, tableRow.child(0).text(), tableRow.child(1).text(), this));
+                }else{
+                    newContests.put(contestId, contests.get(contestId));
+                }
             }
+            contests = newContests;
             this.loaded = true;
         }catch (Exception e){
             throw new PlatformException("get all contests failed");
@@ -72,19 +78,22 @@ public class SatoriPlatform implements Platform {
     }
 
     private void loadSubmissions() throws PlatformException {
-        try{
-            if(!this.loaded) loadContests();
-            this.loadedSubmissions = false;
-            submissions = new HashMap<>();
-            for(SatoriContest contest: contests.values()){
-                for(Submission submission: contest.getSubmissionHistory()){
-                    submissions.put(((SatoriSubmission) submission).getId(), (SatoriSubmission) submission);
+        if(!this.loaded) loadContests();
+        Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
+        this.loadedSubmissions = false;
+        for(SatoriContest contest: contests.values()){
+            contest.loadSubmissions();
+            for(Submission submission: contest.getSubmissionHistory()){
+                String submissionId = submission.getSubmissionId();
+                if(!submissions.containsKey(submissionId)){
+                    newSubmissions.put(submissionId, (SatoriSubmission) submission);
+                }else{
+                    newSubmissions.put(submissionId, submissions.get(submissionId));
                 }
             }
-            this.loadedSubmissions = true;
-        }catch (Exception e){
-            throw new PlatformException("get all contests failed");
         }
+        submissions = newSubmissions;
+        this.loadedSubmissions = true;
     }
 
     public void reload() throws PlatformException {

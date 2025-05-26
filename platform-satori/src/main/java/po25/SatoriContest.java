@@ -26,6 +26,8 @@ public class SatoriContest implements Contest {
         this.description = description;
         this.loaded = false;
         this.loadedSubmissions = false;
+        submissions = new HashMap<>();
+        tasks = new HashMap<>();
     }
 
     @Override
@@ -84,7 +86,7 @@ public class SatoriContest implements Contest {
     private void loadTasks() throws PlatformException {
         try{
             this.loaded = false;
-            tasks = new HashMap<>();
+            Map<String, SatoriTask> newTasks = new HashMap<>();
             Document doc = Jsoup.connect(this.url + "/" + this.contestId + "/problems")
                     .cookie("satori_token", this.satori.satoriToken)
                     .get();
@@ -92,28 +94,37 @@ public class SatoriContest implements Contest {
             for(Element table : tables) {
                 for(Element problem: table.children()) {
                     if((problem.child(0).text().equals("Code"))) continue;
-                    tasks.put(problem.select("a").first().attr("href").split("/")[4], new SatoriTask(problem.select("a").first().attr("href").split("/")[4], problem.child(0).text(), problem.child(1).text(), this.satori.url + problem.select("a").first().attr("href"), this));
+                    String taskId = problem.select("a").first().attr("href").split("/")[4];
+                    if(!tasks.containsKey(taskId)){
+                        newTasks.put(taskId, new SatoriTask(taskId, problem.child(0).text(), problem.child(1).text(), this.satori.url + problem.select("a").first().attr("href"), this));
+                    }else{
+                        newTasks.put(taskId, tasks.get(taskId));
+                    }
                 }
             }
+            tasks = newTasks;
             this.loaded = true;
         }catch(Exception e){
             throw new PlatformException(e.getMessage());
         }
     }
 
-    private void loadSubmissions() throws PlatformException {
-        try{
-            if(!this.loaded) this.loadTasks();
-            this.loadedSubmissions = false;
-            submissions = new HashMap<>();
-            for(SatoriTask task: tasks.values()) {
-                for(Submission submission: task.getSubmissionHistory()) {
-                    submissions.put(((SatoriSubmission) submission).getId(), (SatoriSubmission) submission);
+    protected void loadSubmissions() throws PlatformException {
+        if(!this.loaded) this.loadTasks();
+        Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
+        this.loadedSubmissions = false;
+        for(SatoriTask task: tasks.values()) {
+            task.loadSubmissions();
+            for(Submission submission: task.getSubmissionHistory()) {
+                String submissionId = submission.getSubmissionId();
+                if(!submissions.containsKey(submissionId)){
+                    newSubmissions.put(submissionId, (SatoriSubmission) submission);
+                }else{
+                    newSubmissions.put(submissionId, submissions.get(submissionId));
                 }
             }
-            this.loadedSubmissions = true;
-        }catch(Exception e){
-            throw new PlatformException(e.getMessage());
         }
+        submissions = newSubmissions;
+        this.loadedSubmissions = true;
     }
 }

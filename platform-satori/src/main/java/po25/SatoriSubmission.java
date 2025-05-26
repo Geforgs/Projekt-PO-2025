@@ -15,10 +15,6 @@ public class SatoriSubmission implements Submission {
         this.time = time;
     }
 
-    public String getId() {
-        return id;
-    }
-
     @Override
     public String getSubmissionId() {
         return this.id;
