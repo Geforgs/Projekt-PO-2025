@@ -8,7 +8,16 @@ public class Main {
         try{
             satori.login("login", "hasło");
             List<Contest> contests = satori.getAllContests();
-            System.out.println(contests.get(0).getTasks().get(0).getContent());
+            for (Contest contest : contests) {
+                if(contest.getId().equals("9410000")){
+                    for(Task task: contest.getTasks()){
+                        if(task.getId().equals("9419710")){
+//                    ((SatoriTask) task).submit("/Users/pavlotsikalyshyn/Documents/ClionProject/Codeforces/main.cpp");
+                            System.out.println(((SatoriTask) task).getSubmissionHistory().size());
+                        }
+                    }
+                }
+            }
 //            for(Contest contest : contests) {
 //                contest.getTasks();
 //            }
