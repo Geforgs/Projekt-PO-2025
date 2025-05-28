@@ -25,11 +25,10 @@ public class SatoriPlatform extends AbstractPlatform implements Platform {
 
     @Override
     protected String performPlatformLogin(String username, char[] password) throws PlatformException {
-        String passwordStr = new String(password);
         try {
             Connection.Response res = Jsoup
                     .connect(this.baseApiUrl + "/login")
-                    .data("login", username, "password", passwordStr)
+                    .data("login", username, "password", new String(password))
                     .method(Connection.Method.POST)
                     .timeout(10000)
                     .execute();
@@ -41,69 +40,70 @@ public class SatoriPlatform extends AbstractPlatform implements Platform {
                 throw new PlatformException("Login failed: Satori token not found in response cookies.");
             }
             return token;
-        } catch (PlatformException e) {
-            throw e;
         } catch (Exception e) {
             throw new PlatformException("Login failed for Satori: " + e.getMessage(), e);
         } finally {
-            // clear char[] password vairable
+            Arrays.fill(password, '\0');
         }
     }
 
-    // this needs to check for 'Logged in as <userName>' on Satori website
     @Override
     protected boolean validateTokenWithServer(String token) throws PlatformException {
-        return false;
+        try {
+            Document doc = Jsoup.connect(this.baseApiUrl)
+                    .cookie("satori_token", token)
+                    .timeout(10000)
+                    .get();
+            return doc.text().contains("Logged in");
+        } catch (Exception e) {
+            throw new PlatformException("Failed to validate Satori token with server: " + e.getMessage(), e);
+        }
     }
 
 
     private void loadContests() throws PlatformException {
-        try {
-            this.loaded = false;
-            Map<String, SatoriContest> newContests = new HashMap<>();
+        this.loaded = false;
+        Map<String, SatoriContest> newContests = new HashMap<>();
 
+        try {
             Document doc = Jsoup.connect(this.baseApiUrl + "/contest/select")
                     .cookie("satori_token", getRequiredToken())
                     .timeout(10000)
                     .get();
 
-            Element table = doc.select("div[id=content]").select("table").select("tbody").first();
-            if (table == null) {
+            Element contestTableBody = doc.selectFirst("div#content table tbody");
+            if (contestTableBody == null) {
                 throw new PlatformException("Failed to parse contests page: main content table not found.");
             }
 
-            for (Element tableRow : table.children()) {
-                if (tableRow.children().isEmpty() || tableRow.child(0).text().equals("Name")) {
-                    continue;
-                }
-                Element linkElement = tableRow.child(0).select("a").first();
+            for (Element row : contestTableBody.children()) {
+                Element linkElement = row.selectFirst("td:first-child a[href]");
                 if (linkElement == null) {
-                    System.err.println(getPlatformName() + ": Skipping row, no contest link found: " + tableRow.text());
                     continue;
                 }
-                String unparsedIdHref = linkElement.attr("href");
-                String[] parts = unparsedIdHref.split("/");
 
+                String href = linkElement.attr("href");
+                String[] parts = href.split("/");
                 if (parts.length < 3 || !parts[1].equals("contest") || parts[2].isEmpty()) {
-                    System.err.println(getPlatformName() + ": Could not parse contest ID from href: " + unparsedIdHref);
+                    System.err.println(getPlatformName() + ": Could not parse contest ID from href: " + href);
                     continue;
                 }
                 String contestId = parts[2];
 
-                if (!contests.containsKey(contestId)) {
-                    newContests.put(contestId, new SatoriContest(contestId, tableRow.child(0).text(), tableRow.child(1).text(), this));
-                } else {
-                    SatoriContest existingContest = contests.get(contestId);
-                    newContests.put(contestId, existingContest);
-                }
+                String contestName = linkElement.text();
+                String description = row.child(1).text();
+
+                SatoriContest parsedContest = new SatoriContest(contestId, contestName, description, this);
+
+                newContests.put(contestId, parsedContest);
             }
-            contests = newContests;
+
+            this.contests = newContests;
             this.loaded = true;
         } catch (Exception e) {
             throw new PlatformException("Failed to load Satori contests: " + e.getMessage(), e);
         }
     }
-
     private void loadSubmissions() throws PlatformException {
         if (!this.loaded) {
             loadContests();
@@ -149,7 +149,11 @@ public class SatoriPlatform extends AbstractPlatform implements Platform {
 
     // what about languageId?
     public Submission submitSolution(Task task, String path, String languageId) throws PlatformException {
-        return ((SatoriTask) task).submit(path);
+        if (!(task instanceof SatoriTask)) {
+            throw new PlatformException("Task must be a SatoriTask instance to submit to Satori.");
+        }
+
+        return ((SatoriTask) task).submit(path, languageId);
     }
 
     public Submission getSubmission(String submissionId) throws PlatformException {
