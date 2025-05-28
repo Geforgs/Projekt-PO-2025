@@ -5,11 +5,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 
 public class SatoriContest implements Contest {
-    protected final String url="https://satori.tcs.uj.edu.pl/contest";
     protected final String contestId;
     private final String title;
     protected final SatoriPlatform satori;
@@ -47,7 +47,7 @@ public class SatoriContest implements Contest {
 
     @Override
     public List<Task> getTasks() throws PlatformException {
-        if(!loaded) loadTasks();
+        if (!loaded) loadTasks();
         return new ArrayList<>(tasks.values());
     }
 
@@ -58,9 +58,10 @@ public class SatoriContest implements Contest {
 
     @Override
     public Optional<Task> getTaskById(String taskId) throws PlatformException {
-        return getTasks().stream()
-                .filter(t -> t.getId().equals(taskId))
-                .findFirst();
+        if (!loaded) {
+            loadTasks();
+        }
+        return getTasks().stream().filter(t -> t.getId().equals(taskId)).findFirst();
     }
 
     @Override
@@ -79,47 +80,83 @@ public class SatoriContest implements Contest {
     }
 
     public List<Submission> getSubmissionHistory() throws PlatformException {
-        if(!loadedSubmissions) loadSubmissions();
+        if (!loadedSubmissions) loadSubmissions();
         return new ArrayList<>(submissions.values());
     }
 
     private void loadTasks() throws PlatformException {
-        try{
-            this.loaded = false;
-            Map<String, SatoriTask> newTasks = new HashMap<>();
-            Document doc = Jsoup.connect(this.url + "/" + this.contestId + "/problems")
-                    .cookie("satori_token", this.satori.satoriToken)
-                    .get();
-            Elements tables = doc.select("tbody");
-            for(Element table : tables) {
-                for(Element problem: table.children()) {
-                    if((problem.child(0).text().equals("Code"))) continue;
-                    String taskId = problem.select("a").first().attr("href").split("/")[4];
-                    if(!tasks.containsKey(taskId)){
-                        newTasks.put(taskId, new SatoriTask(taskId, problem.child(0).text(), problem.child(1).text(), this.satori.url + problem.select("a").first().attr("href"), this));
-                    }else{
+        this.loaded = false;
+        Map<String, SatoriTask> newTasks = new HashMap<>();
+        try {
+            String tasksUrl = this.satori.baseApiUrl + "/contest/" + this.contestId + "/problems";
+            Document doc = Jsoup.connect(tasksUrl).cookie("satori_token", this.satori.getRequiredToken()).timeout(10000).get();
+
+            Elements tables = doc.select("div#content table.problems tbody");
+
+            for (Element table : tables) {
+                for (Element problemRow : table.children()) {
+                    Element linkElement = problemRow.selectFirst("td a[href*='/problem/']");
+                    if (linkElement == null) {
+                        continue;
+                    }
+
+                    String href = linkElement.attr("href");
+                    String[] parts = href.split("/");
+
+                    String taskId = null;
+                    for (int i = 0; i < parts.length - 1; i++) {
+                        if (parts[i].equals("problem") && i + 1 < parts.length) {
+                            taskId = parts[i + 1];
+                            break;
+                        }
+                    }
+
+                    if (taskId == null || taskId.isEmpty()) {
+                        System.err.println(satori.getPlatformName() + ": Could not parse task ID from href: " + href + " for contest " + contestId);
+                        continue;
+                    }
+
+                    String problemCode = problemRow.child(0).text();
+                    String problemName = problemRow.child(1).text();
+                    String taskUrl = this.satori.baseApiUrl + href;
+
+                    if (!tasks.containsKey(taskId)) {
+                        newTasks.put(taskId, new SatoriTask(taskId, problemCode, problemName, taskUrl, this));
+                    } else {
                         newTasks.put(taskId, tasks.get(taskId));
                     }
                 }
             }
+
             tasks = newTasks;
             this.loaded = true;
-        }catch(Exception e){
-            throw new PlatformException(e.getMessage());
+        } catch (IOException e) {
+            throw new PlatformException("Failed to load tasks for Satori contest " + this.contestId + " due to network or parsing error: " + e.getMessage(), e);
+        } catch (PlatformException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new PlatformException("An unexpected error occurred while loading tasks for Satori contest " + this.contestId + ": " + e.getMessage(), e);
         }
     }
 
     protected void loadSubmissions() throws PlatformException {
-        if(!this.loaded) this.loadTasks();
+        if (!this.loaded) {
+            loadTasks();
+        }
         Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
         this.loadedSubmissions = false;
-        for(SatoriTask task: tasks.values()) {
+
+        if (this.tasks == null) {
+            throw new PlatformException("Tasks not loaded or tasks map is null for contest " + contestId + ". Cannot load submissions.");
+        }
+
+        for (SatoriTask task : tasks.values()) {
             task.loadSubmissions();
-            for(Submission submission: task.getSubmissionHistory()) {
+            for (Submission submission : task.getSubmissionHistory()) {
                 String submissionId = submission.getSubmissionId();
-                if(!submissions.containsKey(submissionId)){
+                if (!submissions.containsKey(submissionId)) {
                     newSubmissions.put(submissionId, (SatoriSubmission) submission);
-                }else{
+                } else {
                     newSubmissions.put(submissionId, submissions.get(submissionId));
                 }
             }

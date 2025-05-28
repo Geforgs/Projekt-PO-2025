@@ -7,6 +7,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,55 +32,98 @@ public class SatoriTask implements Task {
         this.name = name;
         this.url = url;
         this.contest = contest;
-        loaded = false;
-        loadedSubmissions = false;
-        submissions = new HashMap<>();
+        this.loaded = false;
+        this.loadedSubmissions = false;
+        this.submissions = new HashMap<>();
     }
 
     private void load() throws PlatformException {
-        try{
-            this.loaded = false;
+        this.loaded = false;
+        try {
             Document doc = Jsoup.connect(this.url)
-                    .cookie("satori_token", this.contest.satori.satoriToken)
+                    .cookie("satori_token", this.contest.satori.getRequiredToken())
+                    .timeout(10000)
                     .get();
+
             StringBuilder cssBuilder = new StringBuilder();
-            for(Element link: doc.select("link")){
-                if(link.attr("rel").equals("stylesheet")){
-                    Document cssBody = Jsoup.connect(this.contest.satori.url + link.attr("href"))
-                            .cookie("satori_token", this.contest.satori.satoriToken)
+            for (Element link : doc.select("link")) {
+                String cssUrl = link.attr("href");
+
+                if (link.attr("rel").equals("stylesheet")) {
+                    Document cssBody = Jsoup.connect(cssUrl)
+                            .cookie("satori_token", this.contest.satori.getRequiredToken())
+                            .timeout(5000)
                             .get();
                     cssBuilder.append(cssBody.body().text()).append('\n');
                 }
             }
+
             this.css = cssBuilder.toString();
             this.content = doc.body().getElementsByClass("mainsphinx").first().toString();
             StringBuilder parsedContentBuilder = new StringBuilder();
             for(Element child: doc.body().getElementsByClass("mainsphinx").first().children()){
-                parsedContentBuilder.append(parse(child));
+                parsedContentBuilder.append(parseTextContent(child));
             }
             this.parsedContent = parsedContentBuilder.toString();
             this.loaded = true;
-        }catch(Exception e){
-            throw new PlatformException(e.getMessage());
+        } catch (IOException e) {
+            throw new PlatformException("Failed to load Satori task " + this.id + " content due to network or parsing error: " + e.getMessage(), e);
+        } catch (PlatformException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new PlatformException("An unexpected error occurred while loading Satori task " + this.id + ": " + e.getMessage(), e);
         }
     }
 
-    private String parse(Element element){
+    private String parseTextContent(Element element) {
         StringBuilder answer = new StringBuilder();
-        if(element.nodeName().equals("div") || element.nodeName().equals("table")){
-            for(Element child: element.children()){
-                String childText = parse(child);
+
+        if (element.nodeName().equals("div") || element.nodeName().equals("table")) {
+            for (Element child : element.children()) {
+                String childText = parseTextContent(child);
                 answer.append(childText);
             }
-        }else{
+        } else {
             answer.append(element.text().replace("\\(", "").replace("\\)", "").replace("\\le", "<="));
             answer.append("\n");
         }
+
+//        New system to be tested.
+//        if (element.nodeName().equals("div") || element.nodeName().equals("table") ||
+//                element.nodeName().equals("p") || element.nodeName().equals("ul") ||
+//                element.nodeName().equals("ol") || element.nodeName().equals("pre") ||
+//                element.nodeName().matches("h[1-6]")) {
+//            for (Element child : element.children()) {
+//                answer.append(parseTextContent(child));
+//            }
+//            if (element.nodeName().equals("p") || element.nodeName().equals("pre") || element.nodeName().matches("h[1-6]")) {
+//                answer.append("\n");
+//            }
+//        } else if (element.nodeName().equals("li")) {
+//            answer.append("  * ").append(element.text().trim()).append("\n");
+//        }
+//        else {
+//
+//            String text = element.text()
+//                    .replace("\\(", "$")
+//                    .replace("\\)", "$")
+//                    .replace("\\[", "$$")
+//                    .replace("\\]", "$$")
+//                    .replace("\\le", "<=")
+//                    .replace("\\ge", ">=")
+//                    .replace("\\neq", "!=")
+//                    .replace("\\ldots", "...")
+//                    .replace("\\cdot", "*");
+//            answer.append(text.trim());
+//            if (!element.children().isEmpty() && !element.tagName().equals("span")) {
+//                answer.append(" ");
+//            }
+//        }
         return answer.toString();
     }
 
     public String getCss() throws PlatformException {
-        if(!loaded) this.load();
+        if (!loaded) this.load();
         return this.css;
     }
 
@@ -93,28 +137,30 @@ public class SatoriTask implements Task {
         return this.code + ": " + this.name;
     }
 
-    protected String getCode(){
+    protected String getCode() {
         return this.code;
     }
 
     @Override
-    public String getContent()  {
-        if(!this.loaded){
-            try{
+    public String getContent() {
+        if (!this.loaded) {
+            try {
                 this.load();
-            }catch (PlatformException e){
-                throw new RuntimeException(e);
+            } catch (PlatformException e) {
+                System.err.println("Error loading task content for " + getId() + ": " + e.getMessage());
+                throw new RuntimeException("Failed to load task content: " + e.getMessage(), e);
             }
         }
         return this.parsedContent;
     }
 
     public String getUnparsedContent() {
-        if(!this.loaded){
-            try{
+        if (!this.loaded) {
+            try {
                 this.load();
-            }catch (PlatformException e){
-                throw new RuntimeException(e);
+            } catch (PlatformException e) {
+                System.err.println("Error loading task HTML content for " + getId() + ": " + e.getMessage());
+                throw new RuntimeException("Failed to load task HTML content: " + e.getMessage(), e);
             }
         }
         return this.content;
@@ -140,52 +186,76 @@ public class SatoriTask implements Task {
         return Optional.empty();
     }
 
-    public Submission submit(String path) throws PlatformException {
-        try{
-            File code = new File(path);
-            Connection.Response res = Jsoup
-                    .connect(this.contest.url + "/" + this.contest.contestId + "/submit")
-                    .cookie("satori_token", this.contest.satori.satoriToken)
-                    .data("problem", this.getId())
-                    .data("codefile", code.getAbsolutePath(), Files.newInputStream(code.toPath()))
+    public Submission submit(String filePath, String languageId) throws PlatformException {
+        try {
+            File codeFile = new File(filePath);
+            if (!codeFile.exists() || !codeFile.isFile()) {
+                throw new PlatformException("Source code file not found or is not a file: " + filePath);
+            }
+
+            String submitUrl = this.contest.satori.baseApiUrl + "/contest/" + this.contest.contestId + "/submit";
+
+            Connection.Response res;
+            res = Jsoup.connect(submitUrl)
+                    .cookie("satori_token", this.contest.satori.getRequiredToken())
+                    .data("problem", this.id)
+                    .data("codefile", codeFile.getAbsolutePath(), Files.newInputStream(codeFile.toPath()))
                     .method(Connection.Method.POST)
+                    .timeout(30000)
                     .execute();
+
             Document doc = res.parse();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             LocalDateTime time = LocalDateTime.parse(doc.select("table").select("tr").get(1).children().get(2).text(), formatter);
+
             return new SatoriSubmission(this, doc.select("table").select("tr").get(1).children().get(0).text(), time);
-        }catch (Exception e){
-            throw new PlatformException(e.getMessage());
+
+        } catch (IOException e) {
+            throw new PlatformException("Failed to submit solution for Satori task " + this.id + " due to network error: " + e.getMessage(), e);
+        } catch (PlatformException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new PlatformException("An unexpected error occurred while submitting solution for Satori task " + this.id + ": " + e.getMessage(), e);
         }
     }
 
     public List<Submission> getSubmissionHistory() throws PlatformException {
-        if(!loadedSubmissions) loadSubmissions();
+        if (!loadedSubmissions) loadSubmissions();
         return new ArrayList<>(submissions.values());
     }
 
     protected void loadSubmissions() throws PlatformException {
-        try{
-            this.loadedSubmissions = false;
-            Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
-            Document doc = Jsoup.connect(this.contest.url + "/" + this.contest.contestId + "/results?results_limit=2000000000&results_filter_problem=" + this.id)
-                    .cookie("satori_token", this.contest.satori.satoriToken)
+        this.loadedSubmissions = false;
+        Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
+        try {
+            String resultsUrl = this.contest.satori.baseApiUrl + "/contest/" + this.contest.contestId +
+                    "/results?results_limit=2000000000&results_filter_problem=" + this.id;
+
+            Document doc = Jsoup.connect(resultsUrl)
+                    .cookie("satori_token", this.contest.satori.getRequiredToken())
+                    .timeout(10000)
                     .get();
+
             Elements result = doc.select("table").select("tr");
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            for(int i=1;i<result.size();i++){
+            for (int i = 1; i < result.size(); i++) {
                 String submissionId = result.get(i).children().get(0).text();
-                if(!submissions.containsKey(submissionId)){
+                if (!submissions.containsKey(submissionId)) {
                     LocalDateTime time = LocalDateTime.parse(result.get(i).children().get(2).text(), formatter);
                     newSubmissions.put(submissionId, new SatoriSubmission(this, submissionId, time));
-                }else{
+                } else {
                     newSubmissions.put(submissionId, submissions.get(submissionId));
                 }
             }
+
             submissions = newSubmissions;
             this.loadedSubmissions = true;
-        }catch(Exception e){
-            throw new PlatformException(e.getMessage());
+        } catch (IOException e) {
+            throw new PlatformException("Failed to load submissions for Satori task " + this.id + " due to network or parsing error: " + e.getMessage(), e);
+        } catch (PlatformException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new PlatformException("An unexpected error occurred while loading submissions for Satori task " + this.id + ": " + e.getMessage(), e);
         }
     }
 
