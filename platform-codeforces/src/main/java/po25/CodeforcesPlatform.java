@@ -23,7 +23,7 @@ public class CodeforcesPlatform implements Platform {
     }
 
     @Override
-    public void login(String username, String password) throws PlatformException {
+    public void login(String username, char[] password) throws PlatformException {
         loggedIn = true;
     }
 

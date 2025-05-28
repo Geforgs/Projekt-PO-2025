@@ -12,7 +12,7 @@ public class Main {
         try {
             // 1) Stwórz instancję platformy
             CodeforcesPlatform cf = new CodeforcesPlatform();
-            cf.login("", "");  // no-op
+            cf.login("", "".toCharArray());  // no-op
 
             if (!cf.isSessionValid()) {
                 System.err.println("Nie udało się zalogować na Codeforces.");
