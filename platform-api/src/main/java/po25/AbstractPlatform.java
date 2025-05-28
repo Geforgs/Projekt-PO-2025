@@ -32,12 +32,13 @@ public abstract class AbstractPlatform implements Platform {
             System.err.println("Warning: Could not create config directory: " + configDir + ". Session persistence will be disabled. (" + e.getMessage() + ")");
         }
 
-        this.sessionFilePath = configDir.resolve(getPlatformName().toLowerCase() + ".session");
+        this.sessionFilePath = configDir.resolve(getPlatformName().toLowerCase().replace(" ", "_") + ".session");
         initializeSessionFromFile();
     }
 
     /**
      * Performs the platform-specific login operation.
+     * Implementations should clear the password array after use.
      *
      * @param username The user's username.
      * @param password The user's password.
@@ -80,8 +81,12 @@ public abstract class AbstractPlatform implements Platform {
                 System.err.println(getPlatformName() + ": Existing session token is invalid. Please log in again.");
                 deleteSessionFile();
             }
-        } catch (IOException | PlatformException e) {
-            System.err.println(getPlatformName() + ": Failed to load or validate session token. Reason: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println(getPlatformName() + ": Failed to load session token from file. Reason: " + e.getMessage());
+            clearSessionStateAndFile();
+        }
+        catch (PlatformException e) {
+            System.err.println(getPlatformName() + ": Failed to validate session token or delete session file. Reason: " + e.getMessage());
             clearSessionStateAndFile();
         }
     }
@@ -92,7 +97,7 @@ public abstract class AbstractPlatform implements Platform {
 
         if (newToken == null || newToken.isBlank()) {
             clearSessionStateAndFile();
-            throw new PlatformException("Login failed for " + getPlatformName() + ": The platform returned an empty token.");
+            throw new PlatformException("Login failed for " + getPlatformName() + ": The platform returned an empty or null token.");
         }
 
         saveSessionTokenToFile(newToken);
@@ -107,21 +112,32 @@ public abstract class AbstractPlatform implements Platform {
     }
 
     /**
-     * Checks if the user is currently authenticated.
-     * This is a quick, local check on whether a session token is present in memory.
+     * Checks if the user is currently authenticated based on an in-memory token.
+     * This is a quick, local check. For server-side validation, use isSessionValid().
      *
-     * @return true if a session token exists, false otherwise.
+     * @return true if a session token exists in memory, false otherwise.
      */
     public boolean isAuthenticated() {
         return this.sessionToken.isPresent();
     }
 
-    /*
+    /**
+     * Checks if the current user session is still active/valid by contacting the server.
+     *
+     * @return true if the session is valid, false otherwise (including errors during validation).
+     */
     @Override
-    public boolean isSessionValid() throws PlatformException {
-        return sessionToken.isPresent() && validateTokenWithServer(sessionToken.get());
+    public boolean isSessionValid() {
+        if (sessionToken.isEmpty()) {
+            return false;
+        }
+        try {
+            return validateTokenWithServer(sessionToken.get());
+        } catch (PlatformException e) {
+            System.err.println(getPlatformName() + ": Error during server-side session validation, assuming session is invalid: " + e.getMessage());
+            return false;
+        }
     }
-    */
 
     /**
      * A helper method for API calls to ensure the user is logged in before proceeding.
@@ -137,6 +153,10 @@ public abstract class AbstractPlatform implements Platform {
 
     private void saveSessionTokenToFile(String token) throws PlatformException {
         try {
+            Path parentDir = sessionFilePath.getParent();
+            if (parentDir != null && !Files.exists(parentDir)) {
+                Files.createDirectories(parentDir);
+            }
             Files.writeString(sessionFilePath, token, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             throw new PlatformException("Failed to save session token for " + getPlatformName() + ": " + e.getMessage(), e);
@@ -152,12 +172,14 @@ public abstract class AbstractPlatform implements Platform {
     }
 
     /**
-     * Clears the in-memory session token and deletes the session file from disk.
+     * Clears the in-memory session token and attempts to delete the session file from disk.
      */
     private void clearSessionStateAndFile() {
         this.sessionToken = Optional.empty();
         try {
-            deleteSessionFile();
+            if (Files.exists(sessionFilePath)) {
+                deleteSessionFile();
+            }
         } catch (PlatformException e) {
             System.err.println(getPlatformName() + ": Error during session file cleanup: " + e.getMessage());
         }
