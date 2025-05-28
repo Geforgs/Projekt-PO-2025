@@ -7,14 +7,16 @@ import org.jsoup.nodes.Element;
 
 import java.util.*;
 
-public class SatoriPlatform implements Platform {
-    protected String satoriToken;
-    private boolean loggedIn = false;
-    protected final String url="https://satori.tcs.uj.edu.pl";
+public class SatoriPlatform extends AbstractPlatform implements Platform {
+
     private Map<String, SatoriContest> contests = new HashMap<>();
     private boolean loaded = false;
     private boolean loadedSubmissions = false;
     private Map<String, SatoriSubmission> submissions = new HashMap<>();
+
+    public SatoriPlatform() {
+        super("https://satori.tcs.uj.edu.pl");
+    }
 
     @Override
     public String getPlatformName() {
@@ -22,76 +24,104 @@ public class SatoriPlatform implements Platform {
     }
 
     @Override
-    public void login(String username, String password) throws PlatformException{
-        try{
+    protected String performPlatformLogin(String username, char[] password) throws PlatformException {
+        String passwordStr = new String(password);
+        try {
             Connection.Response res = Jsoup
-                    .connect(url + "/login")
-                    .data("login", username, "password", password)
+                    .connect(this.baseApiUrl + "/login")
+                    .data("login", username, "password", passwordStr)
                     .method(Connection.Method.POST)
+                    .timeout(10000)
                     .execute();
+
             Map<String, String> cookies = res.cookies();
-            satoriToken = cookies.get("satori_token");
-            if(satoriToken == null) throw new PlatformException("Login failed");
-            loggedIn = true;
-        }catch (Exception e){
-            throw new PlatformException("Login failed");
+            String token = cookies.get("satori_token");
+
+            if (token == null || token.isEmpty()) {
+                throw new PlatformException("Login failed: Satori token not found in response cookies.");
+            }
+            return token;
+        } catch (PlatformException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new PlatformException("Login failed for Satori: " + e.getMessage(), e);
+        } finally {
+            // clear char[] password vairable
         }
     }
 
+    // this needs to check for 'Logged in as <userName>' on Satori website
     @Override
-    public boolean isSessionValid(){
-        return this.loggedIn;
+    protected boolean validateTokenWithServer(String token) throws PlatformException {
+        return false;
     }
 
-    @Override
-    public void logout(){
-        this.loggedIn = false;
-    }
 
     private void loadContests() throws PlatformException {
-        try{
+        try {
             this.loaded = false;
             Map<String, SatoriContest> newContests = new HashMap<>();
-            Document doc = Jsoup.connect(url + "/contest/select")
-                    .cookie("satori_token", satoriToken)
+
+            Document doc = Jsoup.connect(this.baseApiUrl + "/contest/select")
+                    .cookie("satori_token", getRequiredToken())
+                    .timeout(10000)
                     .get();
+
             Element table = doc.select("div[id=content]").select("table").select("tbody").first();
-            for(Element tableRow : table.children()){
-                if(tableRow.child(0).text().equals("Name")) continue;
-                String unparsedId = tableRow.child(0).select("a").attr("href");
-                StringBuilder parsedId = new StringBuilder();
-                for(int i=9;i<unparsedId.length()-1;i++){
-                    parsedId.append(unparsedId.charAt(i));
+            if (table == null) {
+                throw new PlatformException("Failed to parse contests page: main content table not found.");
+            }
+
+            for (Element tableRow : table.children()) {
+                if (tableRow.children().isEmpty() || tableRow.child(0).text().equals("Name")) {
+                    continue;
                 }
-                String contestId = parsedId.toString();
-                if(!contests.containsKey(contestId)){
+                Element linkElement = tableRow.child(0).select("a").first();
+                if (linkElement == null) {
+                    System.err.println(getPlatformName() + ": Skipping row, no contest link found: " + tableRow.text());
+                    continue;
+                }
+                String unparsedIdHref = linkElement.attr("href");
+                String[] parts = unparsedIdHref.split("/");
+
+                if (parts.length < 3 || !parts[1].equals("contest") || parts[2].isEmpty()) {
+                    System.err.println(getPlatformName() + ": Could not parse contest ID from href: " + unparsedIdHref);
+                    continue;
+                }
+                String contestId = parts[2];
+
+                if (!contests.containsKey(contestId)) {
                     newContests.put(contestId, new SatoriContest(contestId, tableRow.child(0).text(), tableRow.child(1).text(), this));
-                }else{
-                    newContests.put(contestId, contests.get(contestId));
+                } else {
+                    SatoriContest existingContest = contests.get(contestId);
+                    newContests.put(contestId, existingContest);
                 }
             }
             contests = newContests;
             this.loaded = true;
-        }catch (Exception e){
-            throw new PlatformException("get all contests failed");
+        } catch (Exception e) {
+            throw new PlatformException("Failed to load Satori contests: " + e.getMessage(), e);
         }
     }
 
     private void loadSubmissions() throws PlatformException {
-        if(!this.loaded) loadContests();
+        if (!this.loaded) {
+            loadContests();
+        }
         Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
         this.loadedSubmissions = false;
-        for(SatoriContest contest: contests.values()){
+        for (SatoriContest contest : contests.values()) {
             contest.loadSubmissions();
-            for(Submission submission: contest.getSubmissionHistory()){
+            for (Submission submission : contest.getSubmissionHistory()) {
                 String submissionId = submission.getSubmissionId();
-                if(!submissions.containsKey(submissionId)){
+                if (!submissions.containsKey(submissionId)) {
                     newSubmissions.put(submissionId, (SatoriSubmission) submission);
-                }else{
+                } else {
                     newSubmissions.put(submissionId, submissions.get(submissionId));
                 }
             }
         }
+
         submissions = newSubmissions;
         this.loadedSubmissions = true;
     }
@@ -102,28 +132,37 @@ public class SatoriPlatform implements Platform {
     }
 
     @Override
-    public List<Contest> getAllContests() throws PlatformException{
-        if(!loaded) loadContests();
+    public List<Contest> getAllContests() throws PlatformException {
+        if (!loaded) {
+            loadContests();
+        }
         return new ArrayList<>(contests.values());
     }
 
     @Override
-    public Optional<Contest> getContestById(String contestId) throws PlatformException{
-        if(!loaded) loadContests();
+    public Optional<Contest> getContestById(String contestId) throws PlatformException {
+        if (!loaded) {
+            loadContests();
+        }
         return Optional.of(contests.get(contestId));
     }
 
-    Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
+    // what about languageId?
+    public Submission submitSolution(Task task, String path, String languageId) throws PlatformException {
         return ((SatoriTask) task).submit(path);
     }
 
-    Submission getSubmission(String submissionId) throws PlatformException{
-        if(!loadedSubmissions) loadSubmissions();
+    public Submission getSubmission(String submissionId) throws PlatformException {
+        if (!loadedSubmissions) {
+            loadSubmissions();
+        }
         return this.submissions.get(submissionId);
     }
 
-    List<Submission> getSubmissionHistory() throws PlatformException{
-        if(!loadedSubmissions) loadSubmissions();
+    public List<Submission> getSubmissionHistory() throws PlatformException {
+        if (!loadedSubmissions) {
+            loadSubmissions();
+        }
         return new ArrayList<>(submissions.values());
     }
 }
