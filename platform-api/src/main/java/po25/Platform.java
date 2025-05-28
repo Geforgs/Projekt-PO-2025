@@ -62,7 +62,7 @@ public interface Platform {
      * @param languageId identifier of the programming language.
      * @return identifier of the submitted solution.
      */
-//     String submitSolution(Task task, String solutionCode, String languageId) throws PlatformException;
+//     Submission submitSolution(Task task, String path, String languageId) throws PlatformException;
 
     /**
      * Retrieves the status/result of a specific submission.
@@ -70,7 +70,7 @@ public interface Platform {
      * @param submissionId submission identifier.
      * @return object representing the submission result.
      */
-//     SubmissionResult getSubmissionStatus(String submissionId) throws PlatformException;
+//     Submission getSubmissionStatus(String submissionId) throws PlatformException;
 
     /**
      * Retrieves the submission history for a given task or user.
