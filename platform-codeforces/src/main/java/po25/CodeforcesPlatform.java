@@ -5,7 +5,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 
 import java.io.IOException;
 import java.time.*;
@@ -26,9 +25,7 @@ public class CodeforcesPlatform implements Platform {
 
     @Override
     public void login(String username, String password) throws PlatformException {
-        ChromeOptions options = new ChromeOptions().setBinary("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
-        options.setExperimentalOption("debuggerAddress", "127.0.0.1:9222");
-        ChromeDriver driver = new ChromeDriver(options);
+        ChromeDriver driver = Browser.getChrome();
         try{
             driver.get(url + "/enter");
             driver.navigate().refresh();
@@ -62,9 +59,7 @@ public class CodeforcesPlatform implements Platform {
 
     @Override
     public void logout() throws PlatformException  {
-        ChromeOptions options = new ChromeOptions().setBinary("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
-        options.setExperimentalOption("debuggerAddress", "127.0.0.1:9222");
-        ChromeDriver driver = new ChromeDriver(options);
+        ChromeDriver driver = Browser.getChrome();
         try{
             driver.get(url);
             driver.findElement(By.xpath("//*[text()='Logout']")).click();

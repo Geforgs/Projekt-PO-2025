@@ -33,11 +33,8 @@ public class CfTask implements Task {
         this.url  = url;
     }
 
-
     private void loadDetails() throws IOException {
-        ChromeOptions options = new ChromeOptions().setBinary("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
-        options.setExperimentalOption("debuggerAddress", "127.0.0.1:9222");
-        ChromeDriver driver = new ChromeDriver(options);
+        ChromeDriver driver = Browser.getChrome();
         Document doc;
         try{
             driver.get(url);
@@ -143,6 +140,11 @@ public class CfTask implements Task {
     public Optional<String> getMemoryLimit() {
         ensureLoaded();
         return Optional.ofNullable(memoryLimit);
+    }
+
+    public Submission submit(String path) throws PlatformException{
+
+        return null;
     }
 
     public String getUrl() {

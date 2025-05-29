@@ -53,4 +53,6 @@ public interface Task {
      * @return Optional containing the memory limit or an empty Optional.
      */
     Optional<String> getMemoryLimit();
+
+    Submission submit(String path) throws PlatformException;
 }

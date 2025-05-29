@@ -36,7 +36,7 @@ public interface Platform {
     /**
      * Logs the user out of the platform.
      */
-    void logout() throws PlatformException ;
+    void logout() throws PlatformException;
 
     /**
      * Retrieves a list of all available (or e.g., watched) contests on the platform.
