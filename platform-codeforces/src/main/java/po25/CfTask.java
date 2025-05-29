@@ -5,6 +5,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+
 import java.io.IOException;
 import java.util.Optional;
 
@@ -32,11 +35,18 @@ public class CfTask implements Task {
 
 
     private void loadDetails() throws IOException {
-        Document doc = Jsoup.connect(url)
-                .userAgent("Mozilla/5.0")
-                .timeout(10_000)
-                .get();
-
+        ChromeOptions options = new ChromeOptions().setBinary("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
+        options.setExperimentalOption("debuggerAddress", "127.0.0.1:9222");
+        ChromeDriver driver = new ChromeDriver(options);
+        Document doc;
+        try{
+            driver.get(url);
+            doc = Jsoup.parse(driver.getPageSource());
+        }catch (Exception e){
+            throw e;
+        } finally {
+            driver.quit();
+        }
         Element stmt = doc.selectFirst(".problem-statement");
         if (stmt == null) {
             this.content = "Nie udało się pobrać treści zadania.";
