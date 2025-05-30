@@ -52,7 +52,7 @@ public class ContestWindowController {
                 super.updateItem(s, empty);
                 setText(empty || s == null
                         ? null
-                        : s.getSubmissionId() + " : "  + s.getBriefVerdict());
+                        : s.getSubmissionId() + " : "  + s.getVerdict());
             }
         });
     }
@@ -136,7 +136,7 @@ public class ContestWindowController {
         };
         task.setOnSucceeded(e -> {
             Submission sub = task.getValue();
-            infoLabel.setText("Submitted: " + sub.getSubmissionId() + " → " + sub.getBriefVerdict());
+            infoLabel.setText("Submitted: " + sub.getSubmissionId() + " → " + sub.getVerdict());
             loadSubsAsync();
         });
         task.setOnFailed(e -> infoLabel.setText("Submit failed"));
