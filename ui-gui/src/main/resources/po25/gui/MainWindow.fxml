@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="po25.gui.MainWindowController"
+            prefWidth="600" prefHeight="400">
+
+    <left>
+        <VBox spacing="8" style="-fx-padding:10;">
+            <Label text="Platform:"/>
+            <ComboBox fx:id="platformCombo" prefWidth="140"/>
+            <HBox spacing="6">
+                <Button text="Log In"  onAction="#handleLoginAction"/>
+                <Button text="Log Out" onAction="#handleLogoutAction"/>
+            </HBox>
+            <Button text="Refresh" onAction="#handleRefreshAction"/>
+            <Label fx:id="statusBarLabel" text="Ready." wrapText="true"/>
+        </VBox>
+    </left>
+
+    <center>
+        <VBox spacing="6" style="-fx-padding:10;">
+            <Label text="Contests"/>
+            <ListView fx:id="contestsList" prefHeight="350"/>
+        </VBox>
+    </center>
+
+</BorderPane>

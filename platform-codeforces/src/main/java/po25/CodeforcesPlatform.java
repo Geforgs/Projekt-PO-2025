@@ -168,5 +168,8 @@ public class CodeforcesPlatform implements Platform {
         submissions = newSubmissions;
         this.loadedSubmissions = true;
     }
+    public Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
+        return ((CfTask) task).submit(path);
+    }
 }
 

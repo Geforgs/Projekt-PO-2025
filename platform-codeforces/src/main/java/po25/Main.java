@@ -1,46 +1,67 @@
 package po25;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
 
-/**
- * Prosty launcher, który korzysta z CodeforcesPlatform,
- * wyświetla listę konkursów oraz ich zadania.
- */
 public class Main {
+    private static final String COOKIE_FILE =
+            System.getProperty("user.home") + "/.cf-cookies";
+
     public static void main(String[] args) {
-        try {
-            // 1) Stwórz instancję platformy
-            CodeforcesPlatform cf = new CodeforcesPlatform();
-            cf.login("", "");  // no-op
+        Scanner sc = new Scanner(System.in);
 
-            if (!cf.isSessionValid()) {
-                System.err.println("Nie udało się zalogować na Codeforces.");
-                return;
-            }
-
-            // 2) Pobierz wszystkie konkursy (BEFORE i FINISHED)
-            List<Contest> contests = cf.getAllContests();
-            System.out.println("=== Konkursy Codeforces ===");
-            for (int i = 0; i < contests.size(); i++) {
-                System.out.printf("%2d) %s%n", i+1, contests.get(i).getTitle());
-            }
-
-            // 3) Wybór konkursu
-            Scanner sc = new Scanner(System.in);
-            System.out.print("Wybierz numer konkursu: ");
-            int choice = sc.nextInt() - 1;
-            Contest sel = contests.get(choice);
-
-            // 4) Wypisz zadania
-            System.out.println("\n=== Zadania w „" + sel.getTitle() + "” ===");
-            for (Task t : sel.getTasks()) {
-                System.out.printf(" • %s → %s%n", t.getName(), t.getContent());
-            }
-
-            cf.logout();
-        } catch (Exception e) {
-            e.printStackTrace();
+        /* 1) – cookies */
+        String cookieStr = null;
+        if (!java.nio.file.Files.exists(Paths.get(COOKIE_FILE))) {
+            System.out.println("""
+                Skopiuj nagłówek 'cookie:' z DevTools (Network → Headers)
+                i wklej go w jednej linii poniżej:
+                """);
+            System.out.print("Cookies → ");
+            cookieStr = sc.nextLine();
         }
+
+        CodeforcesPlatform cf = new CodeforcesPlatform();
+        try {
+            cf.login("dummy", cookieStr);      // drugi parametr = cookie string
+            System.out.println("Zalogowano!\n");
+
+            /* 2) – konkursy */
+            List<Contest> contests = cf.getAllContests();
+            for (int i = 0; i < contests.size(); i++)
+                System.out.printf("%3d) %s%n", i + 1, contests.get(i).getTitle());
+            System.out.print("Wybierz konkurs: ");
+            int ci = sc.nextInt() - 1;
+            Contest sel = contests.get(ci);
+
+            /* 3) – zadania */
+            List<Task> tasks = sel.getTasks();
+            System.out.println("\n=== Zadania ===");
+            for (int i = 0; i < tasks.size(); i++) {
+                CfTask t = (CfTask) tasks.get(i);
+                System.out.printf("%2d) [%s] %s%n", i + 1, t.getId(), t.getName());
+            }
+
+            /* 4) – submit? */
+            System.out.print("Submit? (t/n): ");
+            if (sc.next().equalsIgnoreCase("t")) {
+                System.out.print("Nr zadania: "); int ti = sc.nextInt() - 1; sc.nextLine();
+                CfTask t = (CfTask) tasks.get(ti);
+
+                System.out.print("Plik źródłowy: ");
+                String path = sc.nextLine();
+                String code = Files.readString(Paths.get(path));
+
+                System.out.print("programTypeId (np. 64 = G++17): ");
+                String lang = sc.nextLine();
+
+
+            }
+        } catch (Exception e) {
+            System.err.println("Błąd: " + e.getMessage());
+            e.printStackTrace();
+        } finally { }
     }
 }
