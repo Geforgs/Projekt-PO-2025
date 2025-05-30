@@ -14,7 +14,7 @@ public abstract class AbstractPlatform implements Platform {
 
     private final Path sessionFilePath;
 
-    private static final String APP_CONFIG_DIR_NAME = ".dccp_cli";
+    private static final String APP_CONFIG_DIR_NAME = ".dccp";
 
     /**
      * Initializes the platform, sets up the configuration directory, and attempts

@@ -68,7 +68,7 @@ public class SatoriPlatform extends AbstractPlatform implements Platform {
         try {
             Document doc = Jsoup.connect(this.baseApiUrl + "/contest/select")
                     .cookie("satori_token", getRequiredToken())
-                    .timeout(10000)
+                    .timeout(30000)
                     .get();
 
             Element contestTableBody = doc.selectFirst("div#content table tbody");
