@@ -15,6 +15,7 @@ import java.util.concurrent.Callable;
                 ListContestsCommand.class,
                 ViewContestCommand.class,
                 ViewTaskCommand.class,
+                LoginCommand.class,
 //                SubmitCommand.class,
 //                StatusCommand.class,
 //                HistoryCommand.class

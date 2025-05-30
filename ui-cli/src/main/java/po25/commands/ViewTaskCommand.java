@@ -35,7 +35,7 @@ public class ViewTaskCommand implements Callable<Integer> {
     }
 
     @Override
-    public Integer call() throws PlatformException {
+    public Integer call() {
         String platformName = platformOptionMixin.platform;
         String contestId = contestIdMixin.contestId;
         String taskId = taskIdOptionMixin.taskId;
@@ -90,4 +90,3 @@ public class ViewTaskCommand implements Callable<Integer> {
         System.out.println("--------------------");
     }
 }
-

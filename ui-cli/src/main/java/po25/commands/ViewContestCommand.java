@@ -11,6 +11,7 @@ import po25.service.PlatformService;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -70,6 +71,8 @@ public class ViewContestCommand implements Callable<Integer> {
         if (tasks == null || tasks.isEmpty()) {
             System.out.println("No tasks found for this contest or tasks are not yet loaded.");
         } else {
+            tasks.sort(Comparator.comparing(Task::getName, String.CASE_INSENSITIVE_ORDER));
+
             System.out.println("\n--- Tasks in this Contest (" + tasks.size() + ") ---");
             System.out.printf("%-15s | %s%n", "Task ID", "Task Name");
             System.out.println(String.join("", Collections.nCopies(50, "-")));

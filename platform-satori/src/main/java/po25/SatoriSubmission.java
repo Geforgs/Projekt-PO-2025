@@ -60,8 +60,6 @@ public class SatoriSubmission implements Submission {
             this.verdict = "Unknown";
         }
     }
-
-    @Override
     public String getVerdict() {
         if(!this.complete) this.loadVerdict();
         return this.verdict;

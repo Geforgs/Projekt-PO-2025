@@ -1,11 +1,7 @@
 package po25.service;
 
-import po25.Contest;
-import po25.Platform;
-import po25.PlatformException;
-import po25.Task;
+import po25.*;
 
-import po25.CodeforcesPlatform;
 // import po25.SatoriPlatform;
 
 import java.util.Collections;
@@ -31,12 +27,12 @@ public class PlatformService {
             System.err.println("Error initializing Codeforces platform: " + e.getMessage());
         }
 
-        // try {
-        //     Platform satori = new SatoriPlatform();
-        //     registeredPlatforms.put(satori.getPlatformName().toLowerCase(), satori);
-        // } catch (Exception e) {
-        //     System.err.println("Error initializing Satori platform: " + e.getMessage());
-        // }
+         try {
+             Platform satori = new SatoriPlatform();
+             registeredPlatforms.put(satori.getPlatformName().toLowerCase(), satori);
+         } catch (Exception e) {
+             System.err.println("Error initializing Satori platform: " + e.getMessage());
+         }
 
     }
 
@@ -66,7 +62,7 @@ public class PlatformService {
      * @param password     The password.
      * @throws PlatformException if login fails or platform is not found.
      */
-    public void login(String platformName, String username, String password) throws PlatformException {
+    public void login(String platformName, String username, char[] password) throws PlatformException {
         Platform platform = getPlatform(platformName);
 
         if (!platform.isSessionValid()) {

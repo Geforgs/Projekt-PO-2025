@@ -5,11 +5,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 
 public class SatoriContest implements Contest {
-    protected final String url="https://satori.tcs.uj.edu.pl/contest";
     protected final String contestId;
     private final String title;
     protected final SatoriPlatform satori;
@@ -47,7 +47,7 @@ public class SatoriContest implements Contest {
 
     @Override
     public List<Task> getTasks() throws PlatformException {
-        if(!loaded) loadTasks();
+        if (!loaded) loadTasks();
         return new ArrayList<>(tasks.values());
     }
 
@@ -58,9 +58,11 @@ public class SatoriContest implements Contest {
 
     @Override
     public Optional<Task> getTaskById(String taskId) throws PlatformException {
-        return getTasks().stream()
-                .filter(t -> t.getId().equals(taskId))
-                .findFirst();
+        if (!loaded) {
+            loadTasks();
+        }
+
+        return Optional.ofNullable(this.tasks.get(taskId));
     }
 
     @Override
@@ -80,52 +82,106 @@ public class SatoriContest implements Contest {
 
     @Override
     public List<Submission> getSubmissionHistory() throws PlatformException {
-        if(!loadedSubmissions) loadSubmissions();
+        if (!loadedSubmissions) loadSubmissions();
         return new ArrayList<>(submissions.values());
     }
 
     private void loadTasks() throws PlatformException {
-        try{
-            this.loaded = false;
-            Map<String, SatoriTask> newTasks = new HashMap<>();
-            Document doc = Jsoup.connect(this.url + "/" + this.contestId + "/problems")
-                    .cookie("satori_token", this.satori.satoriToken)
+        this.loaded = false;
+        Map<String, SatoriTask> newTasksMap = new HashMap<>();
+
+        try {
+            String contestProblemsPageUrl = this.satori.baseApiUrl + "/contest/" + this.contestId + "/problems";
+            Document doc = Jsoup.connect(contestProblemsPageUrl)
+                    .cookie("satori_token", this.satori.getRequiredToken())
+                    .timeout(30000)
                     .get();
-            Elements tables = doc.select("tbody");
-            for(Element table : tables) {
-                for(Element problem: table.children()) {
-                    if((problem.child(0).text().equals("Code"))) continue;
-                    String taskId = problem.select("a").first().attr("href").split("/")[4];
-                    if(!tasks.containsKey(taskId)){
-                        newTasks.put(taskId, new SatoriTask(taskId, problem.child(0).text(), problem.child(1).text(), this.satori.url + problem.select("a").first().attr("href"), this));
-                    }else{
-                        newTasks.put(taskId, tasks.get(taskId));
-                    }
+
+
+            Elements problemRows = doc.select("tbody > tr");
+
+            for (Element row : problemRows) {
+                Elements cells = row.children();
+
+
+                if (cells.isEmpty() || "Code".equalsIgnoreCase(cells.get(0).text().trim())) {
+                    continue;
                 }
+
+                if (cells.size() < 2) {
+                    System.err.println("SatoriContest: Skipping malformed task row (not enough cells) in contest "
+                            + this.contestId + ": " + row.html());
+                    continue;
+                }
+
+                Element linkElement = row.select("a[href]").first();
+                if (linkElement == null) {
+                    System.err.println("SatoriContest: No link found in task row for contest "
+                            + this.contestId + ": " + row.html());
+                    continue;
+                }
+
+                String problemHref = linkElement.attr("href");
+                String[] hrefParts = problemHref.split("/");
+
+                if (hrefParts.length <= 4) {
+                    System.err.println("SatoriContest: Could not parse taskId from href '" + problemHref
+                            + "' in contest " + this.contestId + ". Expected at least 5 parts after split.");
+                    continue;
+                }
+                String taskId = hrefParts[4];
+
+                String taskCode = cells.get(0).text().trim();
+                String taskTitle = cells.get(1).text().trim();
+                String taskUrl = linkElement.absUrl("href");
+
+                SatoriTask taskInstance = this.tasks.get(taskId);
+                if (taskInstance == null) {
+                    taskInstance = new SatoriTask(taskId, taskCode, taskTitle, taskUrl, this);
+                }
+
+                newTasksMap.put(taskId, taskInstance);
             }
-            tasks = newTasks;
+
+            this.tasks = newTasksMap;
             this.loaded = true;
-        }catch(Exception e){
-            throw new PlatformException(e.getMessage());
+
+        } catch (IOException e) {
+            throw new PlatformException("Failed to load tasks for Satori contest " + this.contestId
+                    + " due to network or parsing error: " + e.getMessage(), e);
+        } catch (PlatformException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new PlatformException("An unexpected error occurred while loading tasks for Satori contest "
+                    + this.contestId + ": " + e.getMessage(), e);
         }
     }
 
-    public void loadSubmissions() throws PlatformException {
-        if(!this.loaded) this.loadTasks();
+    protected void loadSubmissions() throws PlatformException {
+        if (!this.loaded) {
+            loadTasks();
+        }
         Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
         this.loadedSubmissions = false;
-        for(SatoriTask task: tasks.values()) {
+
+        if (this.tasks == null || this.tasks.isEmpty()) {
+            System.err.println("SatoriContest: Tasks not loaded or tasks map is empty for contest " + contestId + ". Cannot load submissions.");
+            this.loadedSubmissions = true;
+            this.submissions = newSubmissions;
+            return;
+        }
+
+        for (SatoriTask task : this.tasks.values()) {
             task.loadSubmissions();
-            for(Submission submission: task.getSubmissionHistory()) {
-                String submissionId = submission.getSubmissionId();
-                if(!submissions.containsKey(submissionId)){
-                    newSubmissions.put(submissionId, (SatoriSubmission) submission);
-                }else{
-                    newSubmissions.put(submissionId, submissions.get(submissionId));
+            for (Submission submission : task.getSubmissionHistory()) {
+                if (!this.submissions.containsKey(submission.getSubmissionId())) {
+                    newSubmissions.put(submission.getSubmissionId(), (SatoriSubmission) submission);
+                } else {
+                    newSubmissions.put(submission.getSubmissionId(), this.submissions.get(submission.getSubmissionId()));
                 }
             }
         }
-        submissions = newSubmissions;
+        this.submissions = newSubmissions;
         this.loadedSubmissions = true;
     }
 }
