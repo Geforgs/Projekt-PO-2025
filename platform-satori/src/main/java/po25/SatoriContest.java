@@ -109,7 +109,7 @@ public class SatoriContest implements Contest {
         }
     }
 
-    protected void loadSubmissions() throws PlatformException {
+    public void loadSubmissions() throws PlatformException {
         if(!this.loaded) this.loadTasks();
         Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
         this.loadedSubmissions = false;

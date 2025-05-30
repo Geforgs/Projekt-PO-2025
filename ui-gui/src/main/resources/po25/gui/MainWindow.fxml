@@ -1,66 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.layout.VBox?>
-
-<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="po25.gui.MainWindowController"
-            prefHeight="768.0" prefWidth="1024.0">
-
-    <top>
-        <MenuBar>
-            <menus>
-                <Menu text="File">
-                    <items>
-                        <MenuItem text="Settings..." onAction="#handleSettingsAction"/>
-                        <MenuItem text="Exit" onAction="#handleExitAction"/>
-                    </items>
-                </Menu>
-                <Menu text="Platform">
-                    <items>
-                        <MenuItem text="Log In..." onAction="#handleLoginAction"/>
-                        <MenuItem text="Log Out" onAction="#handleLogoutAction"/>
-                        <MenuItem text="Refresh Data" onAction="#handleRefreshAction"/>
-                    </items>
-                </Menu>
-                <Menu text="Help">
-                    <items>
-                        <MenuItem text="About..." onAction="#handleAboutAction"/>
-                    </items>
-                </Menu>
-            </menus>
-        </MenuBar>
-    </top>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="po25.gui.MainWindowController"
+            prefWidth="600" prefHeight="400">
 
     <left>
-        <VBox spacing="10" style="-fx-padding: 10;">
-            <children>
-                <Label text="Platforms/Contests Panel (Left)"/>
-            </children>
+        <VBox spacing="8" style="-fx-padding:10;">
+            <Label text="Platform:"/>
+            <ComboBox fx:id="platformCombo" prefWidth="140"/>
+            <HBox spacing="6">
+                <Button text="Log In"  onAction="#handleLoginAction"/>
+                <Button text="Log Out" onAction="#handleLogoutAction"/>
+            </HBox>
+            <Button text="Refresh" onAction="#handleRefreshAction"/>
+            <Label fx:id="statusBarLabel" text="Ready." wrapText="true"/>
         </VBox>
     </left>
 
     <center>
-        <VBox spacing="10" style="-fx-padding: 10;">
-            <children>
-                <Label text="Tasks Panel (Center)"/>
-            </children>
+        <VBox spacing="6" style="-fx-padding:10;">
+            <Label text="Contests"/>
+            <ListView fx:id="contestsList" prefHeight="350"/>
         </VBox>
     </center>
-
-    <right>
-        <VBox spacing="10" style="-fx-padding: 10;">
-            <children>
-                <Label text="Task Details Panel (Right)"/>
-            </children>
-        </VBox>
-    </right>
-
-    <bottom>
-        <Label fx:id="statusBarLabel" text="Ready." style="-fx-padding: 5;"/>
-    </bottom>
 
 </BorderPane>

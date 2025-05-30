@@ -158,5 +158,8 @@ public class CodeforcesPlatform implements Platform {
             throw new PlatformException("Błąd pobierania zadań", e);
         }
     }
+    public Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
+        return ((CfTask) task).submit(path);
+    }
 }
 

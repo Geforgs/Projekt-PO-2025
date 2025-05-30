@@ -36,7 +36,7 @@ public interface Platform {
     /**
      * Logs the user out of the platform.
      */
-    void logout() throws PlatformException;
+    void logout() throws PlatformException ;
 
     /**
      * Retrieves a list of all available (or e.g., watched) contests on the platform.
@@ -58,11 +58,11 @@ public interface Platform {
      * Submits a solution to a task on the platform.
      * (Requires defining Solution and Submission classes or similar)
      * @param task the task to which the solution is submitted.
-     * @param solutionCode source code of the solution.
+     * @param path source code of the solution.
      * @param languageId identifier of the programming language.
      * @return identifier of the submitted solution.
      */
-//     Submission submitSolution(Task task, String path, String languageId) throws PlatformException;
+    public Submission submitSolution(Task task, String path, String languageId) throws PlatformException;
 
     /**
      * Retrieves the status/result of a specific submission.

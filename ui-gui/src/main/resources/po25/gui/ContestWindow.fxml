@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="po25.gui.ContestWindowController"
+            prefWidth="700" prefHeight="500">
+
+    <top>
+        <ToolBar>
+            <Label fx:id="contestLabel"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button text="Submit" onAction="#handleSubmitAction"/>
+        </ToolBar>
+    </top>
+
+    <center>
+        <TabPane fx:id="tabs" tabClosingPolicy="UNAVAILABLE">
+            <Tab text="Tasks">
+                <ListView fx:id="tasksList"/>
+            </Tab>
+            <Tab text="Submissions">
+                <ListView fx:id="subsList"/>
+            </Tab>
+        </TabPane>
+    </center>
+
+    <bottom>
+        <Label fx:id="infoLabel" style="-fx-padding:5;"/>
+    </bottom>
+
+</BorderPane>

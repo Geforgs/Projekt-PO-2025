@@ -14,8 +14,9 @@ public class Browser {
         if(System.getProperty("os.name").startsWith("Mac")){
             pahtToChrome = System.getProperty("user.dir") + "/browser/src/main/java/po25/MacOsChrome/Google Chrome.app/Contents/MacOS/Google Chrome";
         }else if(System.getProperty("os.name").startsWith("Windows")){
-            System.out.println("Soon will be added to the chrome driver");
-            throw new RuntimeException("Windows is not added to the chrome driver");
+            pahtToChrome = System.getProperty("user.dir") + "/browser/WindowsChrome/Google/Chrome/Application/chrome.exe";
+           // System.out.println("Soon will be added to the chrome driver");
+            //throw new RuntimeException("Windows is not added to the chrome driver");
         }
         ChromeOptions options = new ChromeOptions().setBinary(pahtToChrome);
         options.setExperimentalOption("debuggerAddress", "127.0.0.1:9222");

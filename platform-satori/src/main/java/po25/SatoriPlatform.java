@@ -112,8 +112,8 @@ public class SatoriPlatform implements Platform {
         if(!loaded) loadContests();
         return Optional.of(contests.get(contestId));
     }
-
-    Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
+    @Override
+    public Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
         return ((SatoriTask) task).submit(path);
     }
 
