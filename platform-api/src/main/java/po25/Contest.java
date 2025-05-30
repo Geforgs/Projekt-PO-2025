@@ -58,4 +58,6 @@ public interface Contest {
      * @return Optional containing the end date and time or an empty Optional.
      */
     Optional<LocalDateTime> getEndTime();
+
+    public List<Submission> getSubmissionHistory() throws PlatformException;
 }

@@ -31,7 +31,7 @@ public class SatoriSubmission implements Submission {
     }
 
     @Override
-    public String getBriefVerdict() {
+    public String getVerdict() {
         return "";
     }
 

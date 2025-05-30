@@ -16,3 +16,6 @@ build/
 
 # Other generated files
 dependency-reduced-pom.xml
+
+browser/src/main/java/po25/cash
+browser/src/main/java/po25/MacOsChrome

@@ -14,10 +14,14 @@ import java.util.*;
  * Implementacja interfejsu Platform dla Codeforces.
  */
 public class CodeforcesPlatform implements Platform {
-    private static final String API_BASE = "https://codeforces.com/api";
+    protected static final String API_BASE = "https://codeforces.com/api";
     private static final String url = "https://codeforces.com";
     private boolean loggedIn = false;
+    private boolean loadedSubmissions = false;
+    private boolean loaded = false;
     protected String username;
+    private Map<String, CfContest> contests = new HashMap<>();
+    private Map<String, CfSubmission> submissions = new HashMap<>();
 
     @Override
     public String getPlatformName() {
@@ -75,9 +79,9 @@ public class CodeforcesPlatform implements Platform {
         loggedIn = false;
     }
 
-    @Override
-    public List<Contest> getAllContests() throws PlatformException {
+    private void loadContests() throws PlatformException {
         try {
+            Map<String, CfContest> newContests = new HashMap<>();
             String url = API_BASE + "/contest.list?gym=false";
             String body = Jsoup.connect(url)
                     .ignoreContentType(true)
@@ -92,7 +96,6 @@ public class CodeforcesPlatform implements Platform {
             }
 
             JSONArray arr = root.getJSONArray("result");
-            List<Contest> list = new ArrayList<>();
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject c = arr.getJSONObject(i);
                 String id       = Long.toString(c.getLong("id"));
@@ -107,13 +110,20 @@ public class CodeforcesPlatform implements Platform {
                 ZonedDateTime end   = start.plusSeconds(durSec);
 
                 if ("BEFORE".equals(phase) || "FINISHED".equals(phase)) {
-                    list.add(new CfContest(id, name, start, end, this));
+                    newContests.put(id, new CfContest(id, name, start, end, this));
                 }
             }
-            return list;
+            this.contests = newContests;
+            this.loaded = false;
         } catch (IOException e) {
             throw new PlatformException("Błąd sieciowy przy pobieraniu listy konkursów", e);
         }
+    }
+
+    @Override
+    public List<Contest> getAllContests() throws PlatformException {
+        if(!loaded) loadContests();
+        return new ArrayList<>(contests.values());
     }
 
     @Override
@@ -123,44 +133,40 @@ public class CodeforcesPlatform implements Platform {
                 .findFirst();
     }
 
-    /**
-     * Wewnętrzna metoda pobierająca zadania dla danego contestu.
-     */
-    List<Task> fetchTasks(CfContest contest) throws PlatformException {
-        try {
-            String url = API_BASE + "/contest.standings"
-                    + "?contestId=" + contest.getId()
-                    + "&from=1&count=1000";
-            String body = Jsoup.connect(url)
-                    .ignoreContentType(true)
-                    .userAgent("Mozilla/5.0")
-                    .timeout(10_000)
-                    .execute()
-                    .body();
+    @Override
+    public Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
+        return task.submit(path);
+    }
 
-            JSONObject root = new JSONObject(body);
-            if (!"OK".equals(root.getString("status"))) {
-                throw new PlatformException("CF API error: " + root);
+    @Override
+    public Submission getSubmission(String submissionId) throws PlatformException{
+        if(!loadedSubmissions) loadSubmissions();
+        return this.submissions.get(submissionId);
+    }
+
+    @Override
+    public List<Submission> getSubmissionHistory() throws PlatformException{
+        if(!loadedSubmissions) loadSubmissions();
+        return new ArrayList<>(submissions.values());
+    }
+
+    private void loadSubmissions() throws PlatformException {
+        if(!this.loaded) loadContests();
+        Map<String, CfSubmission> newSubmissions = new HashMap<>();
+        this.loadedSubmissions = false;
+        for(CfContest contest: contests.values()){
+            contest.loadSubmissions();
+            for(Submission submission: contest.getSubmissionHistory()){
+                String submissionId = submission.getSubmissionId();
+                if(!submissions.containsKey(submissionId)){
+                    newSubmissions.put(submissionId, (CfSubmission) submission);
+                }else{
+                    newSubmissions.put(submissionId, submissions.get(submissionId));
+                }
             }
-
-            JSONArray problems = root
-                    .getJSONObject("result")
-                    .getJSONArray("problems");
-
-            List<Task> tasks = new ArrayList<>();
-            for (int i = 0; i < problems.length(); i++) {
-                JSONObject p = problems.getJSONObject(i);
-                String index = p.getString("index");
-                String name  = p.getString("name");
-                String link  = "https://codeforces.com/contest/"
-                        + contest.getId()
-                        + "/problem/" + index;
-                tasks.add(new CfTask(index, name, link, contest));
-            }
-            return tasks;
-        } catch (IOException e) {
-            throw new PlatformException("Błąd pobierania zadań", e);
         }
+        submissions = newSubmissions;
+        this.loadedSubmissions = true;
     }
 }
 

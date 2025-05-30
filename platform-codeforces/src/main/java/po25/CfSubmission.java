@@ -32,7 +32,7 @@ public class CfSubmission implements Submission {
     }
 
     @Override
-    public String getBriefVerdict() {
+    public String getVerdict() {
         return "";
     }
 

@@ -113,16 +113,19 @@ public class SatoriPlatform implements Platform {
         return Optional.of(contests.get(contestId));
     }
 
-    Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
+    @Override
+    public Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
         return ((SatoriTask) task).submit(path);
     }
 
-    Submission getSubmission(String submissionId) throws PlatformException{
+    @Override
+    public Submission getSubmission(String submissionId) throws PlatformException{
         if(!loadedSubmissions) loadSubmissions();
         return this.submissions.get(submissionId);
     }
 
-    List<Submission> getSubmissionHistory() throws PlatformException{
+    @Override
+    public List<Submission> getSubmissionHistory() throws PlatformException{
         if(!loadedSubmissions) loadSubmissions();
         return new ArrayList<>(submissions.values());
     }

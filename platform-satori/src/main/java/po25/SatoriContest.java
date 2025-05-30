@@ -78,6 +78,7 @@ public class SatoriContest implements Contest {
         return this.title;
     }
 
+    @Override
     public List<Submission> getSubmissionHistory() throws PlatformException {
         if(!loadedSubmissions) loadSubmissions();
         return new ArrayList<>(submissions.values());

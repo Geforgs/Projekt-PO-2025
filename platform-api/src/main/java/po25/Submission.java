@@ -10,7 +10,7 @@ public interface Submission {
 
     Optional<String> getContestId();
 
-    String getBriefVerdict(); // Could be same as SubmissionResult.getVerdict()
+    String getVerdict();
 
     Optional<LocalDateTime> getSubmittedAt();
 
