@@ -76,7 +76,7 @@ public abstract class AbstractPlatform implements Platform {
 
             if (validateTokenWithServer(tokenFromFile)) {
                 this.sessionToken = Optional.of(tokenFromFile);
-                System.out.println(getPlatformName() + ": Session restored and validated successfully.");
+//                System.out.println(getPlatformName() + ": Session restored and validated successfully.");
             } else {
                 System.err.println(getPlatformName() + ": Existing session token is invalid. Please log in again.");
                 deleteSessionFile();

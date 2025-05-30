@@ -47,12 +47,12 @@ public class SatoriTask implements Task {
 
             StringBuilder cssBuilder = new StringBuilder();
             for (Element link : doc.select("link")) {
-                String cssUrl = link.attr("href");
+                String cssUrl = this.contest.satori.baseApiUrl + link.attr("href");
 
                 if (link.attr("rel").equals("stylesheet")) {
                     Document cssBody = Jsoup.connect(cssUrl)
                             .cookie("satori_token", this.contest.satori.getRequiredToken())
-                            .timeout(5000)
+                            .timeout(10000)
                             .get();
                     cssBuilder.append(cssBody.body().text()).append('\n');
                 }
