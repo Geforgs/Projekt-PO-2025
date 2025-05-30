@@ -12,7 +12,7 @@ import java.util.*;
 /**
  * Implementacja interfejsu Contest dla Codeforces.
  */
-class CfContest implements Contest {
+public class CfContest implements Contest {
     protected final String id;
     private final String title;
     private final LocalDateTime start;

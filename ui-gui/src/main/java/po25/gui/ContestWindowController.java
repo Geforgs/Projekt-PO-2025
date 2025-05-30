@@ -95,6 +95,9 @@ public class ContestWindowController {
                     sc.loadSubmissions();
                     return sc.getSubmissionHistory();
                 }
+                else if(contest instanceof CfContest cc){
+                    return cc.getSubmissionHistory();
+                }
                 return List.of();
             }
         };

@@ -15,7 +15,7 @@
                 <Button text="Log Out" onAction="#handleLogoutAction"/>
             </HBox>
             <Button text="Refresh" onAction="#handleRefreshAction"/>
-            <Label fx:id="statusBarLabel" text="Ready." wrapText="true"/>
+            <Button text="Chrome path" onAction="#handleChromePathAction"/>
         </VBox>
     </left>
 

@@ -6,12 +6,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import po25.Contest;
-import po25.Platform;
-import po25.PlatformException;
-import po25.CodeforcesPlatform;
-import po25.SatoriPlatform;
+import po25.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,12 +26,15 @@ public class MainWindowController {
                 super.updateItem(c, empty);
                 setText(empty || c == null ? null : c.getTitle());
             }
+
+
         });
         contestsList.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2 && contestsList.getSelectionModel().getSelectedItem() != null)
                 openContestWindow(contestsList.getSelectionModel().getSelectedItem());
         });
     }
+
 
     @FXML private void handleLoginAction() {
         String sel = platformCombo.getValue();
@@ -63,7 +63,20 @@ public class MainWindowController {
             statusBarLabel.setText(ex.getMessage());
         }
     }
-
+    @FXML private void handleChromePathAction() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Chrome Path");
+        dialog.setHeaderText("Enter path to Chrome executable:");
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(path -> {
+            Browser.setPathToChrome(path);
+            try {
+                Browser.start();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
     @FXML private void handleLogoutAction() {
         if (platform != null) { try { platform.logout(); } catch (Exception ignored) {} }
         platform = null;
