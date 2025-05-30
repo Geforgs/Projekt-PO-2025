@@ -153,7 +153,7 @@ public class SatoriPlatform extends AbstractPlatform implements Platform {
             throw new PlatformException("Task must be a SatoriTask instance to submit to Satori.");
         }
 
-        return ((SatoriTask) task).submit(path, languageId);
+        return ((SatoriTask) task).submit(path);
     }
 
     public Submission getSubmission(String submissionId) throws PlatformException {

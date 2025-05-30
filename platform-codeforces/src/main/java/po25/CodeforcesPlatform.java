@@ -3,6 +3,8 @@ package po25;
 import org.jsoup.Jsoup;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
 
 import java.io.IOException;
 import java.time.*;
@@ -15,6 +17,7 @@ import java.util.Optional;
  */
 public class CodeforcesPlatform implements Platform {
     private static final String API_BASE = "https://codeforces.com/api";
+    private static final String url = "https://codeforces.com";
     private boolean loggedIn = false;
 
     @Override
@@ -23,7 +26,31 @@ public class CodeforcesPlatform implements Platform {
     }
 
     @Override
-    public void login(String username, char[] password) throws PlatformException {
+    public void login(String username, String password) throws PlatformException {
+        ChromeDriver driver = Browser.getChrome();
+        try{
+            driver.get(url + "/enter");
+            driver.navigate().refresh();
+            int timeout = 16000;
+            while(true){
+                if(driver.getTitle().equals("Codeforces")) {
+                    driver.get(url + "/enter");
+                    timeout = 1000;
+                }else if(driver.getTitle().equals("Login - Codeforces")){
+                    break;
+                }else{
+                    Thread.sleep(timeout);
+                    timeout *= 2;
+                }
+            }
+            driver.findElement(By.id("handleOrEmail")).sendKeys(username);
+            driver.findElement(By.id("password")).sendKeys(password);
+            driver.findElement(By.className("submit")).click();
+        }catch (Exception e){
+            throw new PlatformException(e.getMessage());
+        } finally {
+            driver.quit();
+        }
         loggedIn = true;
     }
 
@@ -33,7 +60,16 @@ public class CodeforcesPlatform implements Platform {
     }
 
     @Override
-    public void logout() {
+    public void logout() throws PlatformException  {
+        ChromeDriver driver = Browser.getChrome();
+        try{
+            driver.get(url);
+            driver.findElement(By.xpath("//*[text()='Logout']")).click();
+        }catch (Exception e){
+            throw new PlatformException(e.getMessage());
+        } finally {
+            driver.quit();
+        }
         loggedIn = false;
     }
 

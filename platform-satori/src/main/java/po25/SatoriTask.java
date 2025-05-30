@@ -61,7 +61,7 @@ public class SatoriTask implements Task {
             this.css = cssBuilder.toString();
             this.content = doc.body().getElementsByClass("mainsphinx").first().toString();
             StringBuilder parsedContentBuilder = new StringBuilder();
-            for(Element child: doc.body().getElementsByClass("mainsphinx").first().children()){
+            for (Element child : doc.body().getElementsByClass("mainsphinx").first().children()) {
                 parsedContentBuilder.append(parseTextContent(child));
             }
             this.parsedContent = parsedContentBuilder.toString();
@@ -87,38 +87,6 @@ public class SatoriTask implements Task {
             answer.append(element.text().replace("\\(", "").replace("\\)", "").replace("\\le", "<="));
             answer.append("\n");
         }
-
-//        New system to be tested.
-//        if (element.nodeName().equals("div") || element.nodeName().equals("table") ||
-//                element.nodeName().equals("p") || element.nodeName().equals("ul") ||
-//                element.nodeName().equals("ol") || element.nodeName().equals("pre") ||
-//                element.nodeName().matches("h[1-6]")) {
-//            for (Element child : element.children()) {
-//                answer.append(parseTextContent(child));
-//            }
-//            if (element.nodeName().equals("p") || element.nodeName().equals("pre") || element.nodeName().matches("h[1-6]")) {
-//                answer.append("\n");
-//            }
-//        } else if (element.nodeName().equals("li")) {
-//            answer.append("  * ").append(element.text().trim()).append("\n");
-//        }
-//        else {
-//
-//            String text = element.text()
-//                    .replace("\\(", "$")
-//                    .replace("\\)", "$")
-//                    .replace("\\[", "$$")
-//                    .replace("\\]", "$$")
-//                    .replace("\\le", "<=")
-//                    .replace("\\ge", ">=")
-//                    .replace("\\neq", "!=")
-//                    .replace("\\ldots", "...")
-//                    .replace("\\cdot", "*");
-//            answer.append(text.trim());
-//            if (!element.children().isEmpty() && !element.tagName().equals("span")) {
-//                answer.append(" ");
-//            }
-//        }
         return answer.toString();
     }
 
@@ -186,17 +154,17 @@ public class SatoriTask implements Task {
         return Optional.empty();
     }
 
-    public Submission submit(String filePath, String languageId) throws PlatformException {
+    @Override
+    public Submission submit(String filePath) throws PlatformException {
         try {
             File codeFile = new File(filePath);
             if (!codeFile.exists() || !codeFile.isFile()) {
                 throw new PlatformException("Source code file not found or is not a file: " + filePath);
             }
-
             String submitUrl = this.contest.satori.baseApiUrl + "/contest/" + this.contest.contestId + "/submit";
 
-            Connection.Response res;
-            res = Jsoup.connect(submitUrl)
+            Connection.Response res = Jsoup
+                    .connect(submitUrl)
                     .cookie("satori_token", this.contest.satori.getRequiredToken())
                     .data("problem", this.id)
                     .data("codefile", codeFile.getAbsolutePath(), Files.newInputStream(codeFile.toPath()))
@@ -227,13 +195,14 @@ public class SatoriTask implements Task {
     protected void loadSubmissions() throws PlatformException {
         this.loadedSubmissions = false;
         Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
+
         try {
             String resultsUrl = this.contest.satori.baseApiUrl + "/contest/" + this.contest.contestId +
                     "/results?results_limit=2000000000&results_filter_problem=" + this.id;
 
             Document doc = Jsoup.connect(resultsUrl)
                     .cookie("satori_token", this.contest.satori.getRequiredToken())
-                    .timeout(10000)
+                    .timeout(30000)
                     .get();
 
             Elements result = doc.select("table").select("tr");

@@ -17,6 +17,7 @@
         <module>platform-satori</module>
         <module>platform-codeforces</module>
         <module>ui-gui</module>
+        <module>browser</module>
     </modules>
 
     <properties>

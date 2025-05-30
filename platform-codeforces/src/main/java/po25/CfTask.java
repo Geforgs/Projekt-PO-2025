@@ -5,6 +5,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+
 import java.io.IOException;
 import java.util.Optional;
 
@@ -30,13 +33,17 @@ public class CfTask implements Task {
         this.url  = url;
     }
 
-
     private void loadDetails() throws IOException {
-        Document doc = Jsoup.connect(url)
-                .userAgent("Mozilla/5.0")
-                .timeout(10_000)
-                .get();
-
+        ChromeDriver driver = Browser.getChrome();
+        Document doc;
+        try{
+            driver.get(url);
+            doc = Jsoup.parse(driver.getPageSource());
+        }catch (Exception e){
+            throw e;
+        } finally {
+            driver.quit();
+        }
         Element stmt = doc.selectFirst(".problem-statement");
         if (stmt == null) {
             this.content = "Nie udało się pobrać treści zadania.";
@@ -133,6 +140,11 @@ public class CfTask implements Task {
     public Optional<String> getMemoryLimit() {
         ensureLoaded();
         return Optional.ofNullable(memoryLimit);
+    }
+
+    public Submission submit(String path) throws PlatformException{
+
+        return null;
     }
 
     public String getUrl() {
