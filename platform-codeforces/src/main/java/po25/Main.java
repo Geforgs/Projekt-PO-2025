@@ -25,7 +25,7 @@ public class Main {
 
         CodeforcesPlatform cf = new CodeforcesPlatform();
         try {
-            cf.login("dummy", cookieStr);      // drugi parametr = cookie string
+            cf.login("dummy", cookieStr.toCharArray());      // drugi parametr = cookie string
             System.out.println("Zalogowano!\n");
 
             /* 2) – konkursy */

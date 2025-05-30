@@ -56,7 +56,7 @@ public class MainWindowController {
 
         platform = sel.equals("Codeforces") ? new CodeforcesPlatform() : new SatoriPlatform();
         try {
-            platform.login(u.get(), p.get());
+            platform.login(u.get(), p.get().toCharArray());
             statusBarLabel.setText("Logged in to " + sel);
             loadContestsAsync();
         } catch (PlatformException ex) {

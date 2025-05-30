@@ -157,7 +157,7 @@ public class SatoriContest implements Contest {
         }
     }
 
-    protected void loadSubmissions() throws PlatformException {
+    public void loadSubmissions() throws PlatformException {
         if (!this.loaded) {
             loadTasks();
         }

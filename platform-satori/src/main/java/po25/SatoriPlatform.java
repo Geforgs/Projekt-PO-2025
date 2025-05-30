@@ -163,6 +163,9 @@ public class SatoriPlatform extends AbstractPlatform implements Platform {
             loadSubmissions();
         }
 
+        return this.submissions.get(submissionId);
+    }
+
     @Override
     public List<Submission> getSubmissionHistory() throws PlatformException{
         if(!loadedSubmissions) loadSubmissions();

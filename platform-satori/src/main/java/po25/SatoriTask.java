@@ -211,7 +211,7 @@ public class SatoriTask implements Task {
                 String submissionId = result.get(i).children().get(0).text();
                 if (!submissions.containsKey(submissionId)) {
                     LocalDateTime time = LocalDateTime.parse(result.get(i).children().get(2).text(), formatter);
-                    newSubmissions.put(submissionId, new SatoriSubmission(this, submissionId, time));
+                    newSubmissions.put(submissionId, new SatoriSubmission(this, submissionId, time, this.url));
                 } else {
                     newSubmissions.put(submissionId, submissions.get(submissionId));
                 }
