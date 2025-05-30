@@ -197,7 +197,7 @@ public class CfTask implements Task {
             element.sendKeys(this.contest.codeforces.username);
             driver.findElement(By.xpath("//input[@value='Apply']")).click();
             List<WebElement> elements = driver.findElements(By.className("inactive"));
-            if(elements.size() > 0){
+            if(elements.size() > 2){
                 elements = driver.findElements(By.className("highlighted-row"));
                 for(WebElement submission: elements){
                     String submissionId = submission.findElement(By.className("view-source")).getText();
