@@ -9,23 +9,23 @@ import java.util.Optional;
  * Implementacja interfejsu Contest dla Codeforces.
  */
 class CfContest implements Contest {
-    private final String id;
+    protected final String id;
     private final String title;
     private final LocalDateTime start;
     private final LocalDateTime end;
-    private final CodeforcesPlatform platform;
+    protected final CodeforcesPlatform codeforces;
 
     private List<Task> tasks = null;
 
     CfContest(String id, String title,
               java.time.ZonedDateTime startZdt,
               java.time.ZonedDateTime endZdt,
-              CodeforcesPlatform platform) {
+              CodeforcesPlatform codeforces) {
         this.id = id;
         this.title = title;
         this.start = startZdt.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
         this.end   = endZdt.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
-        this.platform = platform;
+        this.codeforces = codeforces;
     }
 
     public String getId() {
@@ -40,7 +40,7 @@ class CfContest implements Contest {
     @Override
     public List<Task> getTasks() throws PlatformException {
         if (tasks == null) {
-            tasks = platform.fetchTasks(this);
+            tasks = codeforces.fetchTasks(this);
         }
         return tasks;
     }

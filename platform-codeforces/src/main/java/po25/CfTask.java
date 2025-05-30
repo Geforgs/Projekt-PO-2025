@@ -5,11 +5,18 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.Select;
 
 import java.io.IOException;
-import java.util.Optional;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.*;
 
 /**
  * Implementacja interfejsu Task dla Codeforces.
@@ -19,18 +26,25 @@ public class CfTask implements Task {
     private final String name;
     private String id;
     private final String url;
+    protected final CfContest contest;
 
     private String content;
     private String sampleInput;
     private String sampleOutput;
     private String timeLimit;
     private String memoryLimit;
-    private boolean loaded = false;
+    private boolean loaded;
+    private boolean loadedSubmissions;
+    private Map<String, CfSubmission> submissions;
 
-    public CfTask(String id, String name, String url) {
+    protected CfTask(String id, String name, String url, CfContest contest) {
         this.id = id;
         this.name = name;
         this.url  = url;
+        this.contest = contest;
+        this.loaded = false;
+        this.loadedSubmissions = false;
+        this.submissions = new HashMap<>();
     }
 
     private void loadDetails() throws IOException {
@@ -142,9 +156,102 @@ public class CfTask implements Task {
         return Optional.ofNullable(memoryLimit);
     }
 
+    @Override
     public Submission submit(String path) throws PlatformException{
+        ChromeDriver driver = Browser.getChrome();
+        String submissionId;
+        try{
+            driver.get("https://codeforces.com/contest/" + this.contest.id + "/submit");
+            Select select = new Select(driver.findElement(By.name("submittedProblemIndex")));
+            select.selectByVisibleText(this.getId() + " - " + this.getName());
+            WebElement element = driver.findElement(By.id("sourceCodeTextarea"));
+            element.clear();
+            element.sendKeys(Keys.TAB);
+            String code = new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
+            element.sendKeys(code);
+            Thread.sleep(1000);
+            driver.findElement(By.id("singlePageSubmitButton")).click();
+            Thread.sleep(1000);
+            submissionId = driver.findElement(By.className("highlighted-row")).findElement(By.className("view-source")).getText();
+            DateTimeFormatter formatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("MMM/dd/yyyy HH:mm").toFormatter(Locale.ENGLISH);
+            LocalDateTime time = LocalDateTime.parse(driver.findElement(By.className("highlighted-row")).findElement(By.className("status-small")).getText().replace("UTC+2", ""), formatter);
+            this.submissions.put(submissionId, new CfSubmission(this, submissionId, "https://codeforces.com/contest/" + this.contest.id + "/submission/" + submissionId, time));
+        } catch (Exception e) {
+            throw new PlatformException(e.getMessage());
+        } finally {
+            driver.quit();
+        }
+        return this.submissions.get(submissionId);
+    }
 
-        return null;
+    protected void loadSubmissions() throws PlatformException {
+        ChromeDriver driver = Browser.getChrome();
+        try{
+            Map<String, CfSubmission> newSubmissions = new HashMap<>();
+            driver.get("https://codeforces.com/contest/" + this.contest.id + "/status");
+            Select select = new Select(driver.findElement(By.name("frameProblemIndex")));
+            select.selectByVisibleText(this.getId() + " - " + this.getName());
+            WebElement element = driver.findElement(By.id("participantSubstring"));
+            element.clear();
+            element.sendKeys(Keys.TAB);
+            element.sendKeys(this.contest.codeforces.username);
+            driver.findElement(By.xpath("//input[@value='Apply']")).click();
+            List<WebElement> elements = driver.findElements(By.className("inactive"));
+            if(elements.size() > 0){
+                elements = driver.findElements(By.className("highlighted-row"));
+                for(WebElement submission: elements){
+                    String submissionId = submission.findElement(By.className("view-source")).getText();
+                    DateTimeFormatter formatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("MMM/dd/yyyy HH:mm").toFormatter(Locale.ENGLISH);
+                    LocalDateTime time = LocalDateTime.parse(submission.findElement(By.className("status-small")).getText().replace("UTC+2", ""), formatter);
+                    if(this.submissions.containsKey(submissionId)){
+                        newSubmissions.put(submissionId, this.submissions.get(submissionId));
+                    }else{
+                        newSubmissions.put(submissionId, new CfSubmission(this, submissionId, "https://codeforces.com/contest/" + this.contest.id + "/submission/" + submissionId, time));
+                    }
+                }
+                driver.get(driver.findElements(By.className("arrow")).get(2).getAttribute("href").toString());
+                elements = driver.findElements(By.className("inactive"));
+                while(elements.size() == 0){
+                    elements = driver.findElements(By.className("highlighted-row"));
+                    for(WebElement submission: elements){
+                        String submissionId = submission.findElement(By.className("view-source")).getText();
+                        DateTimeFormatter formatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("MMM/dd/yyyy HH:mm").toFormatter(Locale.ENGLISH);
+                        LocalDateTime time = LocalDateTime.parse(submission.findElement(By.className("status-small")).getText().replace("UTC+2", ""), formatter);
+                        if(this.submissions.containsKey(submissionId)){
+                            newSubmissions.put(submissionId, this.submissions.get(submissionId));
+                        }else{
+                            newSubmissions.put(submissionId, new CfSubmission(this, submissionId, "https://codeforces.com/contest/" + this.contest.id + "/submission/" + submissionId, time));
+                        }
+                    }
+                    driver.get(driver.findElements(By.className("arrow")).get(3).getAttribute("href").toString());
+                    elements = driver.findElements(By.className("inactive"));
+                }
+            }else{
+                elements = driver.findElements(By.className("highlighted-row"));
+                for(WebElement submission: elements){
+                    String submissionId = submission.findElement(By.className("view-source")).getText();
+                    DateTimeFormatter formatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("MMM/dd/yyyy HH:mm").toFormatter(Locale.ENGLISH);
+                    LocalDateTime time = LocalDateTime.parse(submission.findElement(By.className("status-small")).getText().replace("UTC+2", ""), formatter);
+                    if(this.submissions.containsKey(submissionId)){
+                        newSubmissions.put(submissionId, this.submissions.get(submissionId));
+                    }else{
+                        newSubmissions.put(submissionId, new CfSubmission(this, submissionId,  "https://codeforces.com/contest/" + this.contest.id + "/submission/" + submissionId, time));
+                    }
+                }
+            }
+            this.submissions = newSubmissions;
+            this.loadedSubmissions = true;
+        } catch (Exception e) {
+            throw new PlatformException(e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+
+    @Override
+    public List<Submission> getSubmissionHistory() throws PlatformException {
+        if(!loadedSubmissions) loadSubmissions();
+        return new ArrayList<>(submissions.values());
     }
 
     public String getUrl() {

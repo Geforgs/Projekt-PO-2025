@@ -154,7 +154,9 @@ public class SatoriTask implements Task {
             Document doc = res.parse();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             LocalDateTime time = LocalDateTime.parse(doc.select("table").select("tr").get(1).children().get(2).text(), formatter);
-            return new SatoriSubmission(this, doc.select("table").select("tr").get(1).children().get(0).text(), time);
+            String submissionId = doc.select("table").select("tr").get(1).children().get(0).text();
+            submissions.put(submissionId, new SatoriSubmission(this, submissionId, time));
+            return submissions.get(submissionId);
         }catch (Exception e){
             throw new PlatformException(e.getMessage());
         }

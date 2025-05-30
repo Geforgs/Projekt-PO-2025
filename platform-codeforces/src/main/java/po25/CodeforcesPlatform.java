@@ -17,6 +17,7 @@ public class CodeforcesPlatform implements Platform {
     private static final String API_BASE = "https://codeforces.com/api";
     private static final String url = "https://codeforces.com";
     private boolean loggedIn = false;
+    protected String username;
 
     @Override
     public String getPlatformName() {
@@ -26,6 +27,7 @@ public class CodeforcesPlatform implements Platform {
     @Override
     public void login(String username, String password) throws PlatformException {
         ChromeDriver driver = Browser.getChrome();
+        this.username = username;
         try{
             driver.get(url + "/enter");
             driver.navigate().refresh();
@@ -34,6 +36,7 @@ public class CodeforcesPlatform implements Platform {
                 if(driver.getTitle().equals("Codeforces")) {
                     driver.get(url + "/enter");
                     timeout = 1000;
+                    Thread.sleep(timeout);
                 }else if(driver.getTitle().equals("Login - Codeforces")){
                     break;
                 }else{
@@ -62,7 +65,8 @@ public class CodeforcesPlatform implements Platform {
         ChromeDriver driver = Browser.getChrome();
         try{
             driver.get(url);
-            driver.findElement(By.xpath("//*[text()='Logout']")).click();
+            Thread.sleep(1000);
+            driver.get(driver.findElement(By.xpath("//a[text()='Logout']")).getAttribute("href").toString());
         }catch (Exception e){
             throw new PlatformException(e.getMessage());
         } finally {
@@ -151,7 +155,7 @@ public class CodeforcesPlatform implements Platform {
                 String link  = "https://codeforces.com/contest/"
                         + contest.getId()
                         + "/problem/" + index;
-                tasks.add(new CfTask(index, name, link));
+                tasks.add(new CfTask(index, name, link, contest));
             }
             return tasks;
         } catch (IOException e) {

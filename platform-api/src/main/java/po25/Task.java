@@ -1,5 +1,6 @@
 package po25;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface Task {
@@ -55,4 +56,6 @@ public interface Task {
     Optional<String> getMemoryLimit();
 
     Submission submit(String path) throws PlatformException;
+
+    List<Submission> getSubmissionHistory() throws PlatformException;
 }
