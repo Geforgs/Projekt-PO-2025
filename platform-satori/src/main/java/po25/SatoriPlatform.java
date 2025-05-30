@@ -115,7 +115,7 @@ public class SatoriPlatform implements Platform {
 
     @Override
     public Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
-        return ((SatoriTask) task).submit(path);
+        return task.submit(path);
     }
 
     @Override

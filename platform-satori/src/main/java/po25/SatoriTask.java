@@ -155,7 +155,7 @@ public class SatoriTask implements Task {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             LocalDateTime time = LocalDateTime.parse(doc.select("table").select("tr").get(1).children().get(2).text(), formatter);
             String submissionId = doc.select("table").select("tr").get(1).children().get(0).text();
-            submissions.put(submissionId, new SatoriSubmission(this, submissionId, time));
+            submissions.put(submissionId, new SatoriSubmission(this, submissionId, time, "https://satori.tcs.uj.edu.pl/contest/" + this.contest.getId() + "/results/" + submissionId));
             return submissions.get(submissionId);
         }catch (Exception e){
             throw new PlatformException(e.getMessage());
@@ -180,7 +180,7 @@ public class SatoriTask implements Task {
                 String submissionId = result.get(i).children().get(0).text();
                 if(!submissions.containsKey(submissionId)){
                     LocalDateTime time = LocalDateTime.parse(result.get(i).children().get(2).text(), formatter);
-                    newSubmissions.put(submissionId, new SatoriSubmission(this, submissionId, time));
+                    newSubmissions.put(submissionId, new SatoriSubmission(this, submissionId, time, "https://satori.tcs.uj.edu.pl/contest/" + this.contest.getId() + "/results/" + submissionId));
                 }else{
                     newSubmissions.put(submissionId, submissions.get(submissionId));
                 }
