@@ -9,6 +9,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import java.io.IOException;
 import java.time.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +27,10 @@ public class CodeforcesPlatform implements Platform {
     }
 
     @Override
-    public void login(String username, String password) throws PlatformException {
+    public void login(String username, char[] password) throws PlatformException {
+        String stringPassword = new String(password);
+        Arrays.fill(password, ' ');
+
         ChromeDriver driver = Browser.getChrome();
         try{
             driver.get(url + "/enter");
@@ -44,7 +48,7 @@ public class CodeforcesPlatform implements Platform {
                 }
             }
             driver.findElement(By.id("handleOrEmail")).sendKeys(username);
-            driver.findElement(By.id("password")).sendKeys(password);
+            driver.findElement(By.id("password")).sendKeys(stringPassword);
             driver.findElement(By.className("submit")).click();
         }catch (Exception e){
             throw new PlatformException(e.getMessage());
