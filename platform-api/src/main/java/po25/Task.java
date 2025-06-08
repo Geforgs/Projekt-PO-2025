@@ -23,7 +23,7 @@ public interface Task {
      *
      * @return task content.
      */
-    String getContent();
+    String getContent() throws PlatformException, ConnectionException, LoginException;
 
     /**
      * Returns sample input data for the task, if available.
@@ -55,7 +55,11 @@ public interface Task {
      */
     Optional<String> getMemoryLimit();
 
-    Submission submit(String path) throws PlatformException;
+    Submission submit(String path) throws PlatformException, ConnectionException, LoginException;
 
-    List<Submission> getSubmissionHistory() throws PlatformException;
+    List<Submission> getSubmissionHistory() throws PlatformException, ConnectionException, LoginException;
+
+    String getUnparsedContent() throws PlatformException, ConnectionException, LoginException;
+
+    String getCss() throws PlatformException, ConnectionException, LoginException;
 }

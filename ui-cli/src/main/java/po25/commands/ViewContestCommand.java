@@ -2,9 +2,7 @@ package po25.commands;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
-import po25.Contest;
-import po25.PlatformException;
-import po25.Task;
+import po25.*;
 import po25.commands.mixins.ContestIdOptionMixin;
 import po25.commands.mixins.PlatformOptionMixin;
 import po25.service.PlatformService;
@@ -15,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionException;
 
 @Command(name = "view-contest",
         aliases = {"vc", "lt"},
@@ -55,10 +54,18 @@ public class ViewContestCommand implements Callable<Integer> {
             System.err.println("Error fetching contest details from '" + platformName + "': " + e.getMessage());
             // e.printStackTrace();
             return 1;
+        } catch (ConnectionException e) {
+            System.err.println("Error fetching contest details from '" + platformName + "': " + e.getMessage());
+            // e.printStackTrace();
+            return 1;
+        }catch (LoginException e) {
+            System.err.println("Error fetching contest details from '" + platformName + "': " + e.getMessage());
+            // e.printStackTrace();
+            return 1;
         }
     }
 
-    private void displayContestDetails(Contest contest) throws PlatformException {
+    private void displayContestDetails(Contest contest) throws PlatformException, ConnectionException, LoginException {
         System.out.println("\n--- Contest Details ---");
         System.out.println("ID:            " + contest.getId());
         System.out.println("Title:         " + contest.getTitle());

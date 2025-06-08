@@ -61,6 +61,10 @@ public class MainWindowController {
             loadContestsAsync();
         } catch (PlatformException ex) {
             statusBarLabel.setText(ex.getMessage());
+        } catch (LoginException ex) {
+            statusBarLabel.setText(ex.getMessage());
+        } catch (ConnectionException ex) {
+            statusBarLabel.setText(ex.getMessage());
         }
     }
     @FXML private void handleChromePathAction() {

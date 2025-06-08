@@ -57,12 +57,18 @@ public class ContestWindowController {
         });
     }
 
-    private void showContent(Task t) {
+    private void showContent(Task t)  {
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle(t.getName());
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
 
-        TextArea contentArea = new TextArea(t.getContent());
+        // TODO
+        TextArea contentArea = null;
+        try {
+            contentArea = new TextArea(t.getContent());
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
         contentArea.setWrapText(true);
         contentArea.setEditable(false);
 

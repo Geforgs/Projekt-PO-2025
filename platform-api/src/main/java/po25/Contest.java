@@ -28,7 +28,7 @@ public interface Contest {
      *
      * @return list of Task objects.
      */
-    List<Task> getTasks() throws PlatformException;
+    List<Task> getTasks() throws PlatformException, ConnectionException, LoginException;
 
     /**
      * Returns the description of the contest, if available.
@@ -43,7 +43,7 @@ public interface Contest {
      * @param taskId task identifier.
      * @return Optional containing the Task object if a task with the given ID exists, otherwise an empty Optional.
      */
-    Optional<Task> getTaskById(String taskId) throws PlatformException;
+    Optional<Task> getTaskById(String taskId) throws PlatformException, ConnectionException, LoginException;
 
     /**
      * Returns the start date and time of the contest, if specified.
@@ -59,5 +59,6 @@ public interface Contest {
      */
     Optional<LocalDateTime> getEndTime();
 
-    public List<Submission> getSubmissionHistory() throws PlatformException;
+    public List<Submission> getSubmissionHistory() throws PlatformException, ConnectionException, LoginException;
+
 }

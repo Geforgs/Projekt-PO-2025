@@ -72,7 +72,7 @@ public class CfContest implements Contest {
                     .getJSONObject("result")
                     .getJSONArray("problems");
 
-            this.tasks = new HashMap<>();
+            this.tasks = new TreeMap<>();
             for (int i = 0; i < problems.length(); i++) {
                 JSONObject p = problems.getJSONObject(i);
                 String index = p.getString("index");
@@ -116,7 +116,7 @@ public class CfContest implements Contest {
 
     protected void loadSubmissions() throws PlatformException {
         if(this.tasks == null) this.loadTasks();
-        Map<String, CfSubmission> newSubmissions = new HashMap<>();
+        Map<String, CfSubmission> newSubmissions = new TreeMap<>();
         this.loadedSubmissions = false;
         for(CfTask task: tasks.values()) {
             task.loadSubmissions();

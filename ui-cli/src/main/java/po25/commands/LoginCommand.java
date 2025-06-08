@@ -2,6 +2,8 @@ package po25.commands;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import po25.ConnectionException;
+import po25.LoginException;
 import po25.PlatformException;
 import po25.commands.mixins.PlatformOptionMixin;
 import po25.service.PlatformService;
@@ -56,6 +58,14 @@ public class LoginCommand implements Callable<Integer> {
             System.out.println("Successfully logged into " + platformName + " as " + usernameInput + "!");
             return 0;
         } catch (PlatformException e) {
+            System.err.println("Login failed: " + e.getMessage());
+            // e.printStackTrace();
+            return 1;
+        } catch (ConnectionException e) {
+            System.err.println("Login failed: " + e.getMessage());
+            // e.printStackTrace();
+            return 1;
+        } catch (LoginException e) {
             System.err.println("Login failed: " + e.getMessage());
             // e.printStackTrace();
             return 1;

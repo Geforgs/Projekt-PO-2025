@@ -62,7 +62,7 @@ public class PlatformService {
      * @param password     The password.
      * @throws PlatformException if login fails or platform is not found.
      */
-    public void login(String platformName, String username, char[] password) throws PlatformException {
+    public void login(String platformName, String username, char[] password) throws PlatformException, ConnectionException, LoginException {
         Platform platform = getPlatform(platformName);
 
         if (!platform.isSessionValid()) {
@@ -79,7 +79,7 @@ public class PlatformService {
      * @param platformName The name of the platform.
      * @throws PlatformException if logout fails or platform is not found.
      */
-    public void logout(String platformName) throws PlatformException {
+    public void logout(String platformName) throws PlatformException, ConnectionException {
         Platform platform = getPlatform(platformName);
         if (platform.isSessionValid()) {
             platform.logout();
@@ -96,7 +96,7 @@ public class PlatformService {
      * @return true if the session is valid, false otherwise.
      * @throws PlatformException if the platform is not found.
      */
-    public boolean isSessionValid(String platformName) throws PlatformException {
+    public boolean isSessionValid(String platformName) throws PlatformException, ConnectionException {
         Platform platform = getPlatform(platformName);
         return platform.isSessionValid();
     }
@@ -108,7 +108,7 @@ public class PlatformService {
      * @return A list of contests.
      * @throws PlatformException if fetching contests fails or platform is not found.
      */
-    public List<Contest> getContests(String platformName) throws PlatformException {
+    public List<Contest> getContests(String platformName) throws PlatformException, ConnectionException, LoginException {
         Platform platform = getPlatform(platformName);
         // if (!platform.isSessionValid()) {
         //     throw new PlatformException("Not logged into " + platformName + ". Please login first.");
@@ -124,7 +124,7 @@ public class PlatformService {
      * @return An Optional containing the Contest if found, otherwise empty.
      * @throws PlatformException if fetching the contest fails or platform is not found.
      */
-    public Optional<Contest> getContestById(String platformName, String contestId) throws PlatformException {
+    public Optional<Contest> getContestById(String platformName, String contestId) throws PlatformException, ConnectionException, LoginException {
         Platform platform = getPlatform(platformName);
         return platform.getContestById(contestId);
     }
@@ -138,7 +138,7 @@ public class PlatformService {
      * @return A list of tasks for the specified contest. Returns an empty list if contest or tasks are not found.
      * @throws PlatformException if there's an issue communicating with the platform or the platform/contest is invalid.
      */
-    public List<Task> getTasksForContest(String platformName, String contestId) throws PlatformException {
+    public List<Task> getTasksForContest(String platformName, String contestId) throws PlatformException, ConnectionException, LoginException {
         Platform platform = getPlatform(platformName);
 
         Optional<Contest> contestOptional = platform.getContestById(contestId);
@@ -160,7 +160,7 @@ public class PlatformService {
      * @return An Optional containing the Task if found, otherwise empty.
      * @throws PlatformException if there's an issue.
      */
-    public Optional<Task> getTaskInContest(String platformName, String contestId, String taskId) throws PlatformException {
+    public Optional<Task> getTaskInContest(String platformName, String contestId, String taskId) throws PlatformException, ConnectionException, LoginException {
         Optional<Contest> contestOptional = getContestById(platformName, contestId);
         if (contestOptional.isPresent()) {
             return contestOptional.get().getTaskById(taskId);

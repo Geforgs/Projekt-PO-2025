@@ -20,8 +20,8 @@ public class CodeforcesPlatform implements Platform {
     private boolean loadedSubmissions = false;
     private boolean loaded = false;
     protected String username;
-    private Map<String, CfContest> contests = new HashMap<>();
-    private Map<String, CfSubmission> submissions = new HashMap<>();
+    private Map<String, CfContest> contests = new TreeMap<>();
+    private Map<String, CfSubmission> submissions = new TreeMap<>();
 
     @Override
     public String getPlatformName() {
@@ -29,36 +29,25 @@ public class CodeforcesPlatform implements Platform {
     }
 
     @Override
-    public void login(String username, char[] password) throws PlatformException {
+    public void login(String username, char[] password) throws PlatformException, RobotCheckException {
         String stringPassword = new String(password);
         Arrays.fill(password, ' ');
 
         ChromeDriver driver = Browser.getChrome();
         this.username = username;
-        try{
-            driver.get(url + "/enter");
-            driver.navigate().refresh();
-            int timeout = 16000;
-            while(true){
-                if(driver.getTitle().equals("Codeforces")) {
-                    driver.get(url + "/enter");
-                    timeout = 1000;
-                    Thread.sleep(timeout);
-                }else if(driver.getTitle().equals("Login - Codeforces")){
-                    break;
-                }else{
-                    Thread.sleep(timeout);
-                    timeout *= 2;
-                }
-            }
-            driver.findElement(By.id("handleOrEmail")).sendKeys(username);
-            driver.findElement(By.id("password")).sendKeys(stringPassword);
-            driver.findElement(By.className("submit")).click();
-        }catch (Exception e){
-            throw new PlatformException(e.getMessage());
-        } finally {
-            driver.quit();
+        Browser.lock();
+        driver.get(url + "/enter");
+        if(driver.getTitle().contains("Codeforces")) {
+            System.out.println();
+        }else{
+            throw new RobotCheckException("You have to pass robot check");
         }
+        driver.findElement(By.id("handleOrEmail")).sendKeys(username);
+        driver.findElement(By.id("password")).sendKeys(stringPassword);
+        driver.findElement(By.className("submit")).click();
+
+        Browser.unlock();
+        driver.quit();
         loggedIn = true;
     }
 
@@ -84,7 +73,7 @@ public class CodeforcesPlatform implements Platform {
 
     private void loadContests() throws PlatformException {
         try {
-            Map<String, CfContest> newContests = new HashMap<>();
+            Map<String, CfContest> newContests = new TreeMap<>();
             String url = API_BASE + "/contest.list?gym=false";
             String body = Jsoup.connect(url)
                     .ignoreContentType(true)
@@ -137,7 +126,7 @@ public class CodeforcesPlatform implements Platform {
     }
 
     @Override
-    public Submission submitSolution(Task task, String path, String languageId) throws PlatformException{
+    public Submission submitSolution(Task task, String path, String languageId) throws PlatformException, ConnectionException, LoginException{
         return task.submit(path);
     }
 
@@ -155,7 +144,7 @@ public class CodeforcesPlatform implements Platform {
 
     private void loadSubmissions() throws PlatformException {
         if(!this.loaded) loadContests();
-        Map<String, CfSubmission> newSubmissions = new HashMap<>();
+        Map<String, CfSubmission> newSubmissions = new TreeMap<>();
         this.loadedSubmissions = false;
         for(CfContest contest: contests.values()){
             contest.loadSubmissions();

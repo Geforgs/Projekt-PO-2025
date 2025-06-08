@@ -26,6 +26,7 @@ public class SatoriSubmission implements Submission {
         this.url = url;
         this.verdict = "QUE";
         complete = false;
+        this.loadVerdict();
     }
 
     @Override

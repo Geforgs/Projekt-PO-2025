@@ -45,7 +45,7 @@ public abstract class AbstractPlatform implements Platform {
      * @return A valid session token upon successful login.
      * @throws PlatformException if the login fails.
      */
-    protected abstract String performPlatformLogin(String username, char[] password) throws PlatformException;
+    protected abstract String performPlatformLogin(String username, char[] password) throws ConnectionException;
 
     /**
      * Validates a given session token with the platform's server.
@@ -54,7 +54,7 @@ public abstract class AbstractPlatform implements Platform {
      * @return true if the token is valid, false otherwise.
      * @throws PlatformException if an error occurs during validation.
      */
-    protected abstract boolean validateTokenWithServer(String token) throws PlatformException;
+    protected abstract boolean validateTokenWithServer(String token) throws ConnectionException;
 
     /**
      * Attempts to load a session token from the local file and validate it with the server.
@@ -84,20 +84,22 @@ public abstract class AbstractPlatform implements Platform {
         } catch (IOException e) {
             System.err.println(getPlatformName() + ": Failed to load session token from file. Reason: " + e.getMessage());
             clearSessionStateAndFile();
-        }
-        catch (PlatformException e) {
+        } catch (ConnectionException e) {
+            System.err.println(e.getMessage());
+            clearSessionStateAndFile();
+        } catch (PlatformException e) {
             System.err.println(getPlatformName() + ": Failed to validate session token or delete session file. Reason: " + e.getMessage());
             clearSessionStateAndFile();
         }
     }
 
     @Override
-    public void login(String username, char[] password) throws PlatformException {
+    public void login(String username, char[] password) throws LoginException, ConnectionException, PlatformException {
         String newToken = performPlatformLogin(username, password);
 
         if (newToken == null || newToken.isBlank()) {
             clearSessionStateAndFile();
-            throw new PlatformException("Login failed for " + getPlatformName() + ": The platform returned an empty or null token.");
+            throw new LoginException("Login or password is incorrect.");
         }
 
         saveSessionTokenToFile(newToken);
@@ -127,16 +129,11 @@ public abstract class AbstractPlatform implements Platform {
      * @return true if the session is valid, false otherwise (including errors during validation).
      */
     @Override
-    public boolean isSessionValid() {
+    public boolean isSessionValid() throws ConnectionException {
         if (sessionToken.isEmpty()) {
             return false;
         }
-        try {
-            return validateTokenWithServer(sessionToken.get());
-        } catch (PlatformException e) {
-            System.err.println(getPlatformName() + ": Error during server-side session validation, assuming session is invalid: " + e.getMessage());
-            return false;
-        }
+        return validateTokenWithServer(sessionToken.get());
     }
 
     /**
