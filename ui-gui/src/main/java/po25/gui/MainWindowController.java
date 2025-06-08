@@ -3,18 +3,22 @@ package po25.gui;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import po25.*;
+import javafx.geometry.Insets;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 
 public class MainWindowController {
     @FXML private ComboBox<String>  platformCombo;
-    @FXML private Label             statusBarLabel;
     @FXML private ListView<Contest> contestsList;
 
     private Platform platform;
@@ -26,43 +30,75 @@ public class MainWindowController {
                 super.updateItem(c, empty);
                 setText(empty || c == null ? null : c.getTitle());
             }
-
-
         });
         contestsList.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 2 && contestsList.getSelectionModel().getSelectedItem() != null)
+            if (e.getClickCount() == 2 && contestsList.getSelectionModel().getSelectedItem() != null) {
                 openContestWindow(contestsList.getSelectionModel().getSelectedItem());
+            }
         });
     }
 
-
-    @FXML private void handleLoginAction() {
+    @FXML
+    private void handleLoginAction() {
         String sel = platformCombo.getValue();
-        if (sel == null) { statusBarLabel.setText("Choose platform"); return; }
-        TextInputDialog ud = new TextInputDialog(); ud.setHeaderText("Username:");
-        Optional<String> u = ud.showAndWait(); if (u.isEmpty()) return;
-        Dialog<String> pd = new Dialog<>();
-        pd.setHeaderText("Password:");
-        pd.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-        PasswordField pf = new PasswordField();
-        pf.setPromptText("Password");
-        pd.getDialogPane().setContent(pf);
-        pd.setResultConverter(btn -> btn == ButtonType.OK ? pf.getText() : null);
-        Optional<String> p = pd.showAndWait();
-        if (p.isEmpty() || p.get().isBlank()) {
-            statusBarLabel.setText("Login cancelled");
-            return;
-        }
+        if (sel == null) return;
 
-        platform = sel.equals("Codeforces") ? new CodeforcesPlatform() : new SatoriPlatform();
-        try {
-            platform.login(u.get(), p.get().toCharArray());
-            statusBarLabel.setText("Logged in to " + sel);
-            loadContestsAsync();
-        } catch (PlatformException ex) {
-            statusBarLabel.setText(ex.getMessage());
+        Dialog<javafx.util.Pair<String,String>> dialog = new Dialog<>();
+        dialog.setTitle("Login");
+        dialog.setHeaderText("Enter login and password");
+
+        DialogPane dp = dialog.getDialogPane();
+        URL css = getClass().getResource("/po25/gui/modern.css");
+        if (css != null) dp.getStylesheets().add(css.toExternalForm());
+        dp.getStyleClass().add("root-pane");
+
+        ButtonType ok = new ButtonType("Log In", ButtonBar.ButtonData.OK_DONE);
+        dp.getButtonTypes().addAll(ok, ButtonType.CANCEL);
+
+        TextField userField = new TextField();
+        userField.setPromptText("Username");
+        PasswordField passField = new PasswordField();
+        passField.setPromptText("Password");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+        grid.add(new Label("Username:"), 0, 0);
+        grid.add(userField,              1, 0);
+        grid.add(new Label("Password:"), 0, 1);
+        grid.add(passField,              1, 1);
+        dp.setContent(grid);
+        userField.getStyleClass().add("button-raised");
+        passField.getStyleClass().add("button-raised");
+        Node loginButton = dp.lookupButton(ok);
+        loginButton.disableProperty().bind(
+                userField.textProperty().isEmpty()
+                        .or(passField.textProperty().isEmpty())
+        );
+
+        dialog.setResultConverter(btn -> {
+            if (btn == ok) {
+                return new javafx.util.Pair<>(userField.getText(), passField.getText());
+            }
+            return null;
+        });
+
+        Optional<javafx.util.Pair<String,String>> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            var creds = result.get();
+            String username = creds.getKey();
+            char[] password = creds.getValue().toCharArray();
+            platform = sel.equals("Codeforces")
+                    ? new CodeforcesPlatform()
+                    : new SatoriPlatform();
+            try {
+                platform.login(username, password);
+                loadContestsAsync();
+            } catch (PlatformException ignored) {}
         }
     }
+
     @FXML private void handleChromePathAction() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Chrome Path");
@@ -70,22 +106,23 @@ public class MainWindowController {
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(path -> {
             Browser.setPathToChrome(path);
-            try {
-                Browser.start();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            try { Browser.start(); }
+            catch (IOException e) { throw new RuntimeException(e); }
         });
     }
+
     @FXML private void handleLogoutAction() {
-        if (platform != null) { try { platform.logout(); } catch (Exception ignored) {} }
+        if (platform != null) {
+            try { platform.logout(); } catch (Exception ignored) {}
+        }
         platform = null;
         contestsList.getItems().clear();
-        statusBarLabel.setText("Logged out");
     }
 
     @FXML private void handleRefreshAction() {
-        if (platform == null) { statusBarLabel.setText("Login first"); return; }
+        if (platform == null) {
+            return;
+        }
         loadContestsAsync();
     }
 
@@ -98,23 +135,31 @@ public class MainWindowController {
         task.setOnSucceeded(e -> {
             List<Contest> cs = task.getValue();
             contestsList.setItems(FXCollections.observableArrayList(cs));
-            statusBarLabel.setText("Contests: " + cs.size());
         });
-        task.setOnFailed(e -> statusBarLabel.setText("Failed: " + task.getException().getMessage()));
+
         new Thread(task).start();
     }
 
     private void openContestWindow(Contest contest) {
         try {
             FXMLLoader fx = new FXMLLoader(getClass().getResource("/po25/gui/ContestWindow.fxml"));
+            Parent root = fx.load();
+
+            Scene scene = new Scene(root);
+            URL css = getClass().getResource("/po25/gui/modern.css");
+            scene.getStylesheets().add(css.toExternalForm());
+
             Stage st = new Stage();
-            st.setScene(new Scene(fx.load()));
+            st.setScene(scene);
             st.setTitle(contest.getTitle());
+
             ContestWindowController cwc = fx.getController();
             cwc.init(platform, contest);
+
             st.show();
         } catch (Exception ex) {
-            new Alert(Alert.AlertType.ERROR, ex.getMessage(), ButtonType.OK).showAndWait();
+            new Alert(Alert.AlertType.ERROR, ex.getMessage(), ButtonType.OK)
+                    .showAndWait();
         }
     }
 }

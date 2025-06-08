@@ -4,25 +4,26 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="po25.gui.MainWindowController"
+            styleClass="root-pane"
             prefWidth="600" prefHeight="400">
 
     <left>
-        <VBox spacing="8" style="-fx-padding:10;">
-            <Label text="Platform:"/>
-            <ComboBox fx:id="platformCombo" prefWidth="140"/>
+        <VBox spacing="8" styleClass="panel">
+            <Label text="Platform:" styleClass="header-label"/>
+            <ComboBox fx:id="platformCombo" prefWidth="140" styleClass="list-view"/>
             <HBox spacing="6">
-                <Button text="Log In"  onAction="#handleLoginAction"/>
-                <Button text="Log Out" onAction="#handleLogoutAction"/>
+                <Button text="Log In" onAction="#handleLoginAction" styleClass="button"/>
+                <Button text="Log Out" onAction="#handleLogoutAction" styleClass="button"/>
             </HBox>
-            <Button text="Refresh" onAction="#handleRefreshAction"/>
-            <Button text="Chrome path" onAction="#handleChromePathAction"/>
+            <Button text="Refresh" onAction="#handleRefreshAction" styleClass="button"/>
+            <Button text="Chrome path" onAction="#handleChromePathAction" styleClass="button"/>
         </VBox>
     </left>
 
     <center>
-        <VBox spacing="6" style="-fx-padding:10;">
-            <Label text="Contests"/>
-            <ListView fx:id="contestsList" prefHeight="350"/>
+        <VBox spacing="6" styleClass="panel">
+            <Label text="Contests" styleClass="header-label"/>
+            <ListView fx:id="contestsList" prefHeight="350" styleClass="list-view"/>
         </VBox>
     </center>
 
