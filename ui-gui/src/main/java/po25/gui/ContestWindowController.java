@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ContestWindowController {
     @FXML private Label contestLabel;
@@ -292,19 +293,22 @@ public class ContestWindowController {
 
 
     private void pollUntilDone(Submission sub) {
-        final ScheduledFuture<?>[] future = new ScheduledFuture<?>[1];
-        future[0] = scheduler.scheduleAtFixedRate(() -> {
+        final AtomicInteger fails = new AtomicInteger(0);
+
+        scheduler.scheduleAtFixedRate(() -> {
             try {
                 String v = sub.getVerdict();
                 verdictCache.put(sub.getSubmissionId(), v);
-                Platform.runLater(() -> {
-                    subsList.refresh();
-                    infoLabel.setText("Submission "+sub.getSubmissionId()+" → "+v);
-                });
-                if (!"QUE".equals(v)) future[0].cancel(false);
+                Platform.runLater(subsList::refresh);
+
+                if (!"QUE".equals(v) && !"...".equals(v) && !"Waiting".equals(v))
+                    throw new CancellationException();
+
+                fails.set(0);
             } catch (Exception ex) {
-                future[0].cancel(false);
+                if (fails.incrementAndGet() >= 10)
+                    throw new CancellationException();
             }
-        }, 0, 3, TimeUnit.SECONDS);
+        }, 0, 60, TimeUnit.SECONDS);
     }
 }

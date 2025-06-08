@@ -39,8 +39,13 @@ public class CfSubmission implements Submission {
                     verdict = verdicts.get(0).getText();
                     completed = true;
                 }else{
+                    System.out.println(driver.findElements(By.tagName("td")).get(4).getText());
+                    if(driver.findElements(By.tagName("td")).get(4).getText().equals("Compilation error")){
+                        verdict = "Compilation error";
+                        completed = true;
+                        return;
+                    }
                     verdict = "Waiting";
-
                 }
             }
         }catch (Exception e){
