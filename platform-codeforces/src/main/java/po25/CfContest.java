@@ -32,6 +32,7 @@ public class CfContest implements Contest {
         this.end   = endZdt.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
         this.codeforces = codeforces;
         this.loadedSubmissions = false;
+        submissions = new TreeMap<>();
     }
 
     public String getId() {
