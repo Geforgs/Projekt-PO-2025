@@ -6,10 +6,17 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.Pair;
 import po25.*;
+
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,7 +35,7 @@ public class ContestWindowController {
     @FXML private Label infoLabel;
     @FXML private Button submitButton;
 
-    private Object platform;
+    private po25.Platform platform;
     private Contest contest;
 
     private final ObservableList<Submission> subsObservable = FXCollections.observableArrayList();
@@ -36,14 +43,29 @@ public class ContestWindowController {
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor(r -> { Thread t = new Thread(r); t.setDaemon(true); return t; });
 
-    void init(Object p, Contest c) {
+    void init(po25.Platform p, Contest c) {
         platform = p;
         contest = c;
         contestLabel.setText(c.getTitle());
         setupTaskViewer();
 
         subsList.setItems(subsObservable);
-        colTask.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getTaskId()));
+        colTask.setCellValueFactory(cell -> {
+            String taskId = cell.getValue().getTaskId();
+            String taskName;
+            try {
+                taskName = contest.getTaskById(taskId)
+                        .map(po25.Task::getName)
+                        .orElse(taskId);
+            } catch (PlatformException e) {
+                taskName = taskId;
+            } catch (LoginException e) {
+                throw new RuntimeException(e);
+            } catch (ConnectionException e) {
+                throw new RuntimeException(e);
+            }
+            return new SimpleStringProperty(taskName);
+        });
         colId.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getSubmissionId()));
         colVerdict.setCellValueFactory(cell -> {
             String id = cell.getValue().getSubmissionId();
@@ -73,25 +95,34 @@ public class ContestWindowController {
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle(t.getName());
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        TextArea contentArea = null;
-        try{
+
+        DialogPane dp = dialog.getDialogPane();
+        URL cssUrl = getClass().getResource("/po25/gui/modern.css");
+        if (cssUrl != null) dp.getStylesheets().add(cssUrl.toExternalForm());
+        dp.getStyleClass().add("root-pane");
+
+        TextArea contentArea;
+        try {
             contentArea = new TextArea(t.getContent());
-        }catch (LoginException ex){
-            // TODO
-        }catch (ConnectionException ex){
-            // TODO
-        }catch (PlatformException ex){
-            // TODO
+        } catch (Exception ex) {
+            contentArea = new TextArea("Unable to load statement:\n" + ex.getMessage());
         }
-        contentArea.setWrapText(true);
         contentArea.setEditable(false);
-        ScrollPane scroll = new ScrollPane(contentArea);
-        scroll.setFitToWidth(true);
-        scroll.setPrefViewportHeight(300);
-        dialog.getDialogPane().setContent(scroll);
-        dialog.getDialogPane().setPrefSize(600, 350);
+        contentArea.setWrapText(true);
+        contentArea.setPrefSize(600, 420);
+        contentArea.getStyleClass().add("text-area");
+
+        dp.setContent(contentArea);
+        dialog.setResizable(true);
         dialog.showAndWait();
     }
+
+
+
+
+
+
+
 
     private void loadTasksAsync() {
         Task<List<po25.Task>> task = new Task<>() {
@@ -124,7 +155,7 @@ public class ContestWindowController {
             List<Submission> all = task.getValue();
             Platform.runLater(() -> {
                 subsObservable.setAll(all);
-                for (Submission s : all) verdictCache.put(s.getSubmissionId(), "QUE");
+                for (Submission s : all) verdictCache.put(s.getSubmissionId(), "...");
                 subsList.refresh();
             });
             all.forEach(this::pollUntilDone);
@@ -134,6 +165,43 @@ public class ContestWindowController {
         );
         new Thread(task).start();
     }
+    @FXML
+    private void handleChromePathAction() {
+
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Chrome Path");
+        dialog.setHeaderText("Enter path to Chrome executable:");
+
+        DialogPane dp = dialog.getDialogPane();
+        URL css = getClass().getResource("/po25/gui/modern.css");
+        if (css != null) dp.getStylesheets().add(css.toExternalForm());
+        dp.getStyleClass().add("root-pane");
+
+        ButtonType ok = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dp.getButtonTypes().addAll(ok, ButtonType.CANCEL);
+
+        TextField pathField = new TextField();
+        pathField.getStyleClass().add("input-purple");
+
+        dp.setContent(pathField);
+
+        dialog.setResultConverter(btn ->
+                btn == ok ? pathField.getText().trim() : null);
+
+        dialog.showAndWait().ifPresent(path -> {
+            if (!path.isBlank()) {
+                Browser.setPathToChrome(path);
+                try { Browser.start(); }
+                catch (IOException e) { throw new RuntimeException(e); }
+            }
+        });
+    }
+
+
+
+
+
+
 
     @FXML
     private void handleSubmitAction() {
@@ -227,7 +295,7 @@ public class ContestWindowController {
         final ScheduledFuture<?>[] future = new ScheduledFuture<?>[1];
         future[0] = scheduler.scheduleAtFixedRate(() -> {
             try {
-                String v = sub.getVerdict();    // blocking, but off UI
+                String v = sub.getVerdict();
                 verdictCache.put(sub.getSubmissionId(), v);
                 Platform.runLater(() -> {
                     subsList.refresh();

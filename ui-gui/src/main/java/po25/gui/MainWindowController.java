@@ -97,19 +97,24 @@ public class MainWindowController {
                 loadContestsAsync();
             } catch (PlatformException ignored) {}
             catch (ConnectionException e){
-                // TODO
             }catch (LoginException e){
-                // TODO
             }catch (RobotCheckException e){
-                // TODO
             }
         }
     }
 
-    @FXML private void handleChromePathAction() {
+    @FXML
+    private void handleChromePathAction() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Chrome Path");
         dialog.setHeaderText("Enter path to Chrome executable:");
+
+        DialogPane dp = dialog.getDialogPane();
+        URL css = getClass().getResource("/po25/gui/modern.css");
+        if (css != null) dp.getStylesheets().add(css.toExternalForm());
+        dp.getStyleClass().add("root-pane");
+        dialog.getEditor().getStyleClass().add("input-purple");
+
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(path -> {
             Browser.setPathToChrome(path);
@@ -117,6 +122,10 @@ public class MainWindowController {
             catch (IOException e) { throw new RuntimeException(e); }
         });
     }
+
+
+
+
 
     @FXML private void handleLogoutAction() {
         if (platform != null) {

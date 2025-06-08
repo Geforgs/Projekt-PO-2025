@@ -218,3 +218,21 @@
 .root-pane .button:hover {
     -fx-background-color: #6E5BBC;
 }
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+.input-purple,
+.input-purple:focused {
+    -fx-background-color: #5C4B9C;
+    -fx-control-inner-background: #5C4B9C;
+    -fx-text-fill: #E0E0E0;
+    -fx-prompt-text-fill: #AAAAAA;
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+}
+
+
