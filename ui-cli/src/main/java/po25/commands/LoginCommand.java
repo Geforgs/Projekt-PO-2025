@@ -5,6 +5,7 @@ import picocli.CommandLine.Command;
 import po25.ConnectionException;
 import po25.LoginException;
 import po25.PlatformException;
+import po25.RobotCheckException;
 import po25.commands.mixins.PlatformOptionMixin;
 import po25.service.PlatformService;
 
@@ -66,6 +67,11 @@ public class LoginCommand implements Callable<Integer> {
             // e.printStackTrace();
             return 1;
         } catch (LoginException e) {
+            System.err.println("Login failed: " + e.getMessage());
+            // e.printStackTrace();
+            return 1;
+        } catch (RobotCheckException e) {
+            // TODO
             System.err.println("Login failed: " + e.getMessage());
             // e.printStackTrace();
             return 1;

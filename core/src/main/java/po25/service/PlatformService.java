@@ -62,7 +62,7 @@ public class PlatformService {
      * @param password     The password.
      * @throws PlatformException if login fails or platform is not found.
      */
-    public void login(String platformName, String username, char[] password) throws PlatformException, ConnectionException, LoginException {
+    public void login(String platformName, String username, char[] password) throws PlatformException, ConnectionException, LoginException, RobotCheckException {
         Platform platform = getPlatform(platformName);
 
         if (!platform.isSessionValid()) {

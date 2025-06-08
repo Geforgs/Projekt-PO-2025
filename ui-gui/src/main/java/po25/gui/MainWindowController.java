@@ -65,6 +65,8 @@ public class MainWindowController {
             statusBarLabel.setText(ex.getMessage());
         } catch (ConnectionException ex) {
             statusBarLabel.setText(ex.getMessage());
+        } catch (RobotCheckException ex) {
+            // TODO
         }
     }
     @FXML private void handleChromePathAction() {
