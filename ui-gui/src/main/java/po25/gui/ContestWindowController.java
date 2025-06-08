@@ -73,7 +73,16 @@ public class ContestWindowController {
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle(t.getName());
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        TextArea contentArea = new TextArea(t.getContent());
+        TextArea contentArea = null;
+        try{
+            contentArea = new TextArea(t.getContent());
+        }catch (LoginException ex){
+            // TODO
+        }catch (ConnectionException ex){
+            // TODO
+        }catch (PlatformException ex){
+            // TODO
+        }
         contentArea.setWrapText(true);
         contentArea.setEditable(false);
         ScrollPane scroll = new ScrollPane(contentArea);

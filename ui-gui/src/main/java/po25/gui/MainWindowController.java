@@ -96,6 +96,13 @@ public class MainWindowController {
                 platform.login(username, password);
                 loadContestsAsync();
             } catch (PlatformException ignored) {}
+            catch (ConnectionException e){
+                // TODO
+            }catch (LoginException e){
+                // TODO
+            }catch (RobotCheckException e){
+                // TODO
+            }
         }
     }
 

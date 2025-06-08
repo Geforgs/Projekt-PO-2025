@@ -37,9 +37,9 @@ public class CodeforcesPlatform implements Platform {
         this.username = username;
         Browser.lock();
         driver.get(url + "/enter");
-        if(driver.getTitle().contains("Codeforces")) {
-            System.out.println();
-        }else{
+        if(!driver.getTitle().contains("Codeforces")) {
+            Browser.unlock();
+            driver.quit();
             throw new RobotCheckException("You have to pass robot check");
         }
         driver.findElement(By.id("handleOrEmail")).sendKeys(username);
@@ -59,6 +59,7 @@ public class CodeforcesPlatform implements Platform {
     @Override
     public void logout() throws PlatformException  {
         ChromeDriver driver = Browser.getChrome();
+        Browser.lock();
         try{
             driver.get(url);
             Thread.sleep(1000);
@@ -66,6 +67,7 @@ public class CodeforcesPlatform implements Platform {
         }catch (Exception e){
             throw new PlatformException(e.getMessage());
         } finally {
+            Browser.unlock();
             driver.quit();
         }
         loggedIn = false;
