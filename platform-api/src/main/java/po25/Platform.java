@@ -24,14 +24,14 @@ public interface Platform {
      * @param username username.
      * @param password user's password.
      */
-    void login(String username, char[] password) throws LoginException, ConnectionException, PlatformException, RobotCheckException;
+    void login(String username, char[] password) throws PlatformException;
 
     /**
      * Checks if the current user session is still active/valid.
      *
      * @return true if the session is valid, false otherwise.
      */
-    boolean isSessionValid() throws ConnectionException;
+    boolean isSessionValid();
 
     /**
      * Logs the user out of the platform.
@@ -44,7 +44,7 @@ public interface Platform {
      *
      * @return list of Contest objects.
      */
-    List<Contest> getAllContests() throws PlatformException, ConnectionException, LoginException, LoginException;
+    List<Contest> getAllContests() throws PlatformException;
 
     /**
      * Retrieves a specific contest based on its identifier.
@@ -52,7 +52,7 @@ public interface Platform {
      * @param contestId contest identifier.
      * @return Optional containing the Contest object if a contest with the given ID exists, otherwise an empty Optional.
      */
-    Optional<Contest> getContestById(String contestId) throws PlatformException, ConnectionException, LoginException;
+    Optional<Contest> getContestById(String contestId) throws PlatformException;
 
     /**
      * Submits a solution to a task on the platform.
@@ -62,7 +62,7 @@ public interface Platform {
      * @param languageId identifier of the programming language.
      * @return identifier of the submitted solution.
      */
-     Submission submitSolution(Task task, String path, String languageId) throws PlatformException, ConnectionException, LoginException;
+     public Submission submitSolution(Task task, String path, String languageId) throws PlatformException;
 
     /**
      * Retrieves the status/result of a specific submission.
@@ -70,13 +70,13 @@ public interface Platform {
      * @param submissionId submission identifier.
      * @return object representing the submission result.
      */
-     Submission getSubmission(String submissionId) throws PlatformException, ConnectionException, LoginException;
+     Submission getSubmission(String submissionId) throws PlatformException;
 
     /**
      * Retrieves the submission history for a given task or user.
      *
      * @return list of submissions.
      */
-    List<Submission> getSubmissionHistory() throws PlatformException, ConnectionException, LoginException;
+    List<Submission> getSubmissionHistory() throws PlatformException;
 }
 

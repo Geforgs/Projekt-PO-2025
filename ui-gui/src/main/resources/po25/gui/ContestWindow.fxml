@@ -1,32 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXRippler?>
+<?import com.jfoenix.controls.JFXListView?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="po25.gui.ContestWindowController"
-            prefWidth="700" prefHeight="500">
+            prefWidth="700" prefHeight="500"
+            styleClass="root-pane">
 
     <top>
-        <ToolBar>
-            <Label fx:id="contestLabel"/>
-            <Pane HBox.hgrow="ALWAYS"/>
-            <Button text="Submit" onAction="#handleSubmitAction"/>
-        </ToolBar>
+        <HBox spacing="8" alignment="CENTER_LEFT" style="-fx-padding:0 16;" styleClass="toolbar">
+            <Label fx:id="contestLabel" styleClass="header-label"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <JFXRippler>
+                <children>
+                    <JFXButton fx:id="submitButton"
+                               text="Submit"
+                               onAction="#handleSubmitAction"
+                               styleClass="button-raised"/>
+                </children>
+            </JFXRippler>
+        </HBox>
     </top>
 
     <center>
-        <TabPane fx:id="tabs" tabClosingPolicy="UNAVAILABLE">
-            <Tab text="Tasks">
-                <ListView fx:id="tasksList"/>
-            </Tab>
-            <Tab text="Submissions">
-                <ListView fx:id="subsList"/>
-            </Tab>
+        <TabPane fx:id="tabs"
+                 tabClosingPolicy="UNAVAILABLE"
+                 styleClass="tab-pane">
+            <tabs>
+                <Tab text="Tasks">
+                    <content>
+                        <JFXListView fx:id="tasksList"
+                                     styleClass="list-view"/>
+                    </content>
+                </Tab>
+                <Tab text="Submissions">
+                    <content>
+                        <TableView fx:id="subsList" styleClass="table-view">
+                            <columns>
+                                <TableColumn fx:id="colTask"    text="Task"/>
+                                <TableColumn fx:id="colId"      text="Submission ID"/>
+                                <TableColumn fx:id="colVerdict" text="Verdict"/>
+                            </columns>
+                        </TableView>
+                    </content>
+                </Tab>
+            </tabs>
         </TabPane>
     </center>
 
     <bottom>
-        <Label fx:id="infoLabel" style="-fx-padding:5;"/>
+        <Label fx:id="infoLabel"
+               styleClass="info-label"
+               style="-fx-padding:5 16;"/>
     </bottom>
 
 </BorderPane>
