@@ -44,7 +44,7 @@ public class CfTask implements Task {
         this.contest = contest;
         this.loaded = false;
         this.loadedSubmissions = false;
-        this.submissions = new HashMap<>();
+        this.submissions = new TreeMap<>();
     }
 
     private void loadDetails() throws IOException {
@@ -187,7 +187,7 @@ public class CfTask implements Task {
     protected void loadSubmissions() throws PlatformException {
         ChromeDriver driver = Browser.getChrome();
         try{
-            Map<String, CfSubmission> newSubmissions = new HashMap<>();
+            Map<String, CfSubmission> newSubmissions = new TreeMap<>();
             driver.get("https://codeforces.com/contest/" + this.contest.id + "/status");
             Select select = new Select(driver.findElement(By.name("frameProblemIndex")));
             select.selectByVisibleText(this.getId() + " - " + this.getName());
@@ -252,6 +252,16 @@ public class CfTask implements Task {
     public List<Submission> getSubmissionHistory() throws PlatformException {
         if(!loadedSubmissions) loadSubmissions();
         return new ArrayList<>(submissions.values());
+    }
+
+    @Override
+    public String getUnparsedContent() {
+        return "";
+    }
+
+    @Override
+    public String getCss() throws PlatformException {
+        return "";
     }
 
     public String getUrl() {

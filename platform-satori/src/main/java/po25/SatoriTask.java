@@ -37,8 +37,11 @@ public class SatoriTask implements Task {
         this.submissions = new HashMap<>();
     }
 
-    private void load() throws PlatformException {
+    private void load() throws PlatformException, ConnectionException, LoginException {
         this.loaded = false;
+        if (!this.contest.satori.isSessionValid()) {
+            throw new LoginException("You are not logged in.");
+        }
         try {
             Document doc = Jsoup.connect(this.url)
                     .cookie("satori_token", this.contest.satori.getRequiredToken())
@@ -67,11 +70,7 @@ public class SatoriTask implements Task {
             this.parsedContent = parsedContentBuilder.toString();
             this.loaded = true;
         } catch (IOException e) {
-            throw new PlatformException("Failed to load Satori task " + this.id + " content due to network or parsing error: " + e.getMessage(), e);
-        } catch (PlatformException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new PlatformException("An unexpected error occurred while loading Satori task " + this.id + ": " + e.getMessage(), e);
+            throw new ConnectionException("Failed to load Satori task " + this.id + " content due to network or parsing error: " + e.getMessage(), e);
         }
     }
 
@@ -90,7 +89,7 @@ public class SatoriTask implements Task {
         return answer.toString();
     }
 
-    public String getCss() throws PlatformException {
+    public String getCss() throws PlatformException, ConnectionException, LoginException {
         if (!loaded) this.load();
         return this.css;
     }
@@ -110,26 +109,17 @@ public class SatoriTask implements Task {
     }
 
     @Override
-    public String getContent() {
+    public String getContent() throws PlatformException, ConnectionException, LoginException {
         if (!this.loaded) {
-            try {
-                this.load();
-            } catch (PlatformException e) {
-                System.err.println("Error loading task content for " + getId() + ": " + e.getMessage());
-                throw new RuntimeException("Failed to load task content: " + e.getMessage(), e);
-            }
+            this.load();
         }
         return this.parsedContent;
     }
 
-    public String getUnparsedContent() {
+    @Override
+    public String getUnparsedContent() throws PlatformException, ConnectionException, LoginException {
         if (!this.loaded) {
-            try {
-                this.load();
-            } catch (PlatformException e) {
-                System.err.println("Error loading task HTML content for " + getId() + ": " + e.getMessage());
-                throw new RuntimeException("Failed to load task HTML content: " + e.getMessage(), e);
-            }
+            this.load();
         }
         return this.content;
     }
@@ -155,7 +145,10 @@ public class SatoriTask implements Task {
     }
 
     @Override
-    public Submission submit(String filePath) throws PlatformException {
+    public Submission submit(String filePath) throws PlatformException, ConnectionException, LoginException {
+        if (!this.contest.satori.isSessionValid()) {
+            throw new LoginException("You are not logged in.");
+        }
         try {
             File codeFile = new File(filePath);
             if (!codeFile.exists() || !codeFile.isFile()) {
@@ -179,20 +172,19 @@ public class SatoriTask implements Task {
             submissions.put(submissionId, new SatoriSubmission(this, submissionId, time, "https://satori.tcs.uj.edu.pl/contest/" + this.contest.getId() + "/results/" + submissionId));
             return submissions.get(submissionId);
         } catch (IOException e) {
-            throw new PlatformException("Failed to submit solution for Satori task " + this.id + " due to network error: " + e.getMessage(), e);
-        } catch (PlatformException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new PlatformException("An unexpected error occurred while submitting solution for Satori task " + this.id + ": " + e.getMessage(), e);
+            throw new ConnectionException("Failed to submit solution for Satori task " + this.id + " due to network error: " + e.getMessage(), e);
         }
     }
 
-    public List<Submission> getSubmissionHistory() throws PlatformException {
+    public List<Submission> getSubmissionHistory() throws PlatformException, ConnectionException, LoginException {
         if (!loadedSubmissions) loadSubmissions();
         return new ArrayList<>(submissions.values());
     }
 
-    protected void loadSubmissions() throws PlatformException {
+    protected void loadSubmissions() throws PlatformException, ConnectionException, LoginException {
+        if (!this.contest.satori.isSessionValid()) {
+            throw new LoginException("You are not logged in.");
+        }
         this.loadedSubmissions = false;
         Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
 
@@ -211,7 +203,7 @@ public class SatoriTask implements Task {
                 String submissionId = result.get(i).children().get(0).text();
                 if (!submissions.containsKey(submissionId)) {
                     LocalDateTime time = LocalDateTime.parse(result.get(i).children().get(2).text(), formatter);
-                    newSubmissions.put(submissionId, new SatoriSubmission(this, submissionId, time, this.url));
+                    newSubmissions.put(submissionId, new SatoriSubmission(this, submissionId, time, "https://satori.tcs.uj.edu.pl/contest/" + this.contest.getId() + "/results/" + submissionId));
                 } else {
                     newSubmissions.put(submissionId, submissions.get(submissionId));
                 }
@@ -220,15 +212,11 @@ public class SatoriTask implements Task {
             submissions = newSubmissions;
             this.loadedSubmissions = true;
         } catch (IOException e) {
-            throw new PlatformException("Failed to load submissions for Satori task " + this.id + " due to network or parsing error: " + e.getMessage(), e);
-        } catch (PlatformException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new PlatformException("An unexpected error occurred while loading submissions for Satori task " + this.id + ": " + e.getMessage(), e);
+            throw new ConnectionException("Failed to load submissions for Satori task " + this.id + " due to network or parsing error: " + e.getMessage(), e);
         }
     }
 
-    public void reload() throws PlatformException {
+    public void reload() throws PlatformException, ConnectionException, LoginException {
         this.load();
         this.loadSubmissions();
     }

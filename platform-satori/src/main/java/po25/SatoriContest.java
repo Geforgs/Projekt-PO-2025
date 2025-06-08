@@ -8,6 +8,9 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class SatoriContest implements Contest {
     protected final String contestId;
@@ -26,8 +29,8 @@ public class SatoriContest implements Contest {
         this.description = description;
         this.loaded = false;
         this.loadedSubmissions = false;
-        submissions = new HashMap<>();
-        tasks = new HashMap<>();
+        submissions = new TreeMap<>();
+        tasks = new TreeMap<>();
     }
 
     @Override
@@ -40,13 +43,13 @@ public class SatoriContest implements Contest {
         return this.title;
     }
 
-    public void reload() throws PlatformException {
+    public void reload() throws PlatformException, ConnectionException, LoginException {
         this.loadTasks();
         this.loadSubmissions();
     }
 
     @Override
-    public List<Task> getTasks() throws PlatformException {
+    public List<Task> getTasks() throws PlatformException, ConnectionException, LoginException {
         if (!loaded) loadTasks();
         return new ArrayList<>(tasks.values());
     }
@@ -57,7 +60,7 @@ public class SatoriContest implements Contest {
     }
 
     @Override
-    public Optional<Task> getTaskById(String taskId) throws PlatformException {
+    public Optional<Task> getTaskById(String taskId) throws PlatformException, ConnectionException, LoginException {
         if (!loaded) {
             loadTasks();
         }
@@ -81,14 +84,17 @@ public class SatoriContest implements Contest {
     }
 
     @Override
-    public List<Submission> getSubmissionHistory() throws PlatformException {
+    public List<Submission> getSubmissionHistory() throws PlatformException, ConnectionException, LoginException {
         if (!loadedSubmissions) loadSubmissions();
         return new ArrayList<>(submissions.values());
     }
 
-    private void loadTasks() throws PlatformException {
+    private void loadTasks() throws PlatformException, ConnectionException, LoginException {
         this.loaded = false;
-        Map<String, SatoriTask> newTasksMap = new HashMap<>();
+        Map<String, SatoriTask> newTasksMap = new TreeMap<>();
+        if (!this.satori.isSessionValid()){
+            throw new LoginException("You are not logged in " + this.satori.getPlatformName());
+        }
 
         try {
             String contestProblemsPageUrl = this.satori.baseApiUrl + "/contest/" + this.contestId + "/problems";
@@ -147,39 +153,52 @@ public class SatoriContest implements Contest {
             this.loaded = true;
 
         } catch (IOException e) {
-            throw new PlatformException("Failed to load tasks for Satori contest " + this.contestId
+            throw new ConnectionException("Failed to load tasks for Satori contest " + this.contestId
                     + " due to network or parsing error: " + e.getMessage(), e);
-        } catch (PlatformException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new PlatformException("An unexpected error occurred while loading tasks for Satori contest "
-                    + this.contestId + ": " + e.getMessage(), e);
         }
     }
 
-    public void loadSubmissions() throws PlatformException {
+    public void loadSubmissions() throws PlatformException, ConnectionException, LoginException {
         if (!this.loaded) {
             loadTasks();
         }
-        Map<String, SatoriSubmission> newSubmissions = new HashMap<>();
+        if (!this.satori.isSessionValid()){
+            throw new LoginException("You are not logged in " + this.satori.getPlatformName());
+        }
+        ExecutorService es = Executors.newCachedThreadPool();
+        final Map<String, SatoriSubmission> newSubmissions = new TreeMap<>();
+        Set<SatoriTask> unsuccesses = new HashSet<>();
         this.loadedSubmissions = false;
 
-        if (this.tasks == null || this.tasks.isEmpty()) {
-            System.err.println("SatoriContest: Tasks not loaded or tasks map is empty for contest " + contestId + ". Cannot load submissions.");
-            this.loadedSubmissions = true;
-            this.submissions = newSubmissions;
-            return;
-        }
-
         for (SatoriTask task : this.tasks.values()) {
-            task.loadSubmissions();
-            for (Submission submission : task.getSubmissionHistory()) {
-                if (!this.submissions.containsKey(submission.getSubmissionId())) {
-                    newSubmissions.put(submission.getSubmissionId(), (SatoriSubmission) submission);
-                } else {
-                    newSubmissions.put(submission.getSubmissionId(), this.submissions.get(submission.getSubmissionId()));
+            es.execute(new Runnable() {
+                public void run() {
+                    try{
+                        task.loadSubmissions();
+                        for (Submission submission : task.getSubmissionHistory()) {
+                            synchronized (newSubmissions) {
+                                String submissionId = submission.getSubmissionId();
+                                if (!submissions.containsKey(submissionId)) {
+                                    newSubmissions.put(submissionId, (SatoriSubmission) submission);
+                                } else {
+                                    newSubmissions.put(submissionId, submissions.get(submissionId));
+                                }
+                            }
+                        }
+                    }catch (Exception e){
+                        unsuccesses.add(task);
+                    }
                 }
+            });
+        }
+        es.shutdown();
+        try {
+            boolean finished = es.awaitTermination(5, TimeUnit.MINUTES);
+            if (!finished || unsuccesses.size() > 0) {
+                throw new PlatformException("Unsaccessfull grabing submissions");
             }
+        }catch (InterruptedException e){
+            throw new PlatformException("Unsaccessfull grabing submissions");
         }
         this.submissions = newSubmissions;
         this.loadedSubmissions = true;

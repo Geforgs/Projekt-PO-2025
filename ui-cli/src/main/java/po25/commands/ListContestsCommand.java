@@ -2,7 +2,9 @@ package po25.commands;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import po25.ConnectionException;
 import po25.Contest;
+import po25.LoginException;
 import po25.PlatformException;
 import po25.commands.mixins.PlatformOptionMixin;
 import po25.service.PlatformService;
@@ -56,6 +58,14 @@ public class ListContestsCommand implements Callable<Integer> {
             }
             return 0;
         } catch (PlatformException e) {
+            System.err.println("Error fetching contests from '" + platformName + "': " + e.getMessage());
+            // e.printStackTrace();
+            return 1;
+        } catch (ConnectionException e) {
+            System.err.println("Error fetching contests from '" + platformName + "': " + e.getMessage());
+            // e.printStackTrace();
+            return 1;
+        } catch (LoginException e) {
             System.err.println("Error fetching contests from '" + platformName + "': " + e.getMessage());
             // e.printStackTrace();
             return 1;

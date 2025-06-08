@@ -14,7 +14,7 @@ public class Main {
             String content = task.getContent();
 
             System.out.println(content);
-        }catch (PlatformException e){
+        }catch (Exception e){
             System.out.println(e.getMessage());
         }
     }
