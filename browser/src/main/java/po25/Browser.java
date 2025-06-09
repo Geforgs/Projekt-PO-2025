@@ -14,7 +14,6 @@ public class Browser {
     private static boolean started = false;
     private static Process process;
     private static String pathToChrome;
-    private static ReentrantLock lock = new ReentrantLock();
 
     static public ChromeDriver getChrome(){
         if(!started){
@@ -42,13 +41,5 @@ public class Browser {
     static public void stop(){
         process.destroy();
         started = false;
-    }
-
-    static public void lock(){
-        lock.lock();
-    }
-
-    static public void unlock(){
-        lock.unlock();
     }
 }

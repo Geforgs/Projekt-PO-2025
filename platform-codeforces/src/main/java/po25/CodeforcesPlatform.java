@@ -5,6 +5,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.Wait;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.IOException;
 import java.time.*;
@@ -35,18 +37,17 @@ public class CodeforcesPlatform implements Platform {
 
         ChromeDriver driver = Browser.getChrome();
         this.username = username;
-        Browser.lock();
         driver.get(url + "/enter");
         if(!driver.getTitle().contains("Codeforces")) {
-            Browser.unlock();
             driver.quit();
             throw new RobotCheckException("You have to pass robot check");
         }
+        Wait<WebDriver> wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        wait.until(d -> !driver.findElements(By.tagName("form")).isEmpty());
         driver.findElement(By.id("handleOrEmail")).sendKeys(username);
         driver.findElement(By.id("password")).sendKeys(stringPassword);
         driver.findElement(By.className("submit")).click();
 
-        Browser.unlock();
         driver.quit();
         loggedIn = true;
     }
@@ -59,7 +60,6 @@ public class CodeforcesPlatform implements Platform {
     @Override
     public void logout() throws PlatformException  {
         ChromeDriver driver = Browser.getChrome();
-        Browser.lock();
         try{
             driver.get(url);
             Thread.sleep(1000);
@@ -67,7 +67,6 @@ public class CodeforcesPlatform implements Platform {
         }catch (Exception e){
             throw new PlatformException(e.getMessage());
         } finally {
-            Browser.unlock();
             driver.quit();
         }
         loggedIn = false;
