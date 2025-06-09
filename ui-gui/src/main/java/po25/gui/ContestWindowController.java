@@ -309,6 +309,6 @@ public class ContestWindowController {
                 if (fails.incrementAndGet() >= 10)
                     throw new CancellationException();
             }
-        }, 0, 60, TimeUnit.SECONDS);
+        }, 0, 5, TimeUnit.SECONDS);
     }
 }

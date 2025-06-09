@@ -51,7 +51,7 @@ public class SatoriSubmission implements Submission {
                     .cookie("satori_token", this.task.contest.satori.getRequiredToken())
                     .get();
             String result = doc.select("table").select("tr").get(1).select("td").get(4).text();
-            if(!result.equals("None") && !result.equals("QUE")){
+            if(!result.equals("None") && !result.equals("QUE") && !result.equals("...")){
                 this.verdict = result;
                 this.complete = true;
             }else{

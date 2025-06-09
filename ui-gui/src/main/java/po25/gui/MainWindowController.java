@@ -64,9 +64,9 @@ public class MainWindowController {
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(20));
-        grid.add(new Label("Username:"), 0, 0);
+        //grid.add(new Label("Username:"), 0, 0);
         grid.add(userField,              1, 0);
-        grid.add(new Label("Password:"), 0, 1);
+        //grid.add(new Label("Password:"), 0, 1);
         grid.add(passField,              1, 1);
         dp.setContent(grid);
         userField.getStyleClass().add("button-raised");
