@@ -15,7 +15,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Pair;
 import po25.*;
-
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -23,6 +22,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+
+
 
 public class ContestWindowController {
     @FXML private Label contestLabel;
@@ -143,13 +144,7 @@ public class ContestWindowController {
     private void loadSubsAsync() {
         Task<List<Submission>> task = new Task<>() {
             @Override protected List<Submission> call() throws Exception {
-                if (contest instanceof SatoriContest sc) {
-                    sc.loadSubmissions();
-                    return sc.getSubmissionHistory();
-                } else if (contest instanceof CfContest cc) {
-                    return cc.getSubmissionHistory();
-                }
-                return List.of();
+                return contest.getSubmissionHistory();
             }
         };
         task.setOnSucceeded(e -> {
@@ -211,7 +206,7 @@ public class ContestWindowController {
             infoLabel.setText("Pick a task first");
             return;
         }
-        Dialog<Pair<String,String>> dialog = new Dialog<>();
+        Dialog<Pair<Language,String>> dialog = new Dialog<>();
         dialog.setTitle("Submit Solution");
         dialog.setHeaderText("Choose language and paste code:");
 
@@ -227,8 +222,9 @@ public class ContestWindowController {
         bOk.getStyleClass().add("button-raised");
         bCancel.getStyleClass().add("button-raised");
 
-        ComboBox<String> langBox = new ComboBox<>(FXCollections.observableArrayList("Java","C++","Python"));
-        langBox.setValue("Java");
+        ComboBox<Language> langBox = new ComboBox<>(FXCollections.observableArrayList(Language.values()));
+        langBox.setValue(Language.JAVA);
+
         langBox.getStyleClass().add("list-view");
 
         Label langLabel = new Label("Language:");
@@ -250,16 +246,11 @@ public class ContestWindowController {
             return null;
         });
 
-        Optional<Pair<String,String>> result = dialog.showAndWait();
+        Optional<Pair<Language,String>> result = dialog.showAndWait();
         if (result.isEmpty() || result.get().getValue().isBlank()) return;
-        String lang = result.get().getKey();
+        Language lang = result.get().getKey();
         String code = result.get().getValue();
-        String ext = switch(lang) {
-            case "Java"   -> "java";
-            case "C++"    -> "cpp";
-            case "Python" -> "py";
-            default       -> "txt";
-        };
+        String ext = lang.getFileExtension();
 
         submitButton.setDisable(true);
         Task<Submission> task = new Task<>() {
@@ -267,9 +258,7 @@ public class ContestWindowController {
                 Path tmp = Files.createTempFile("subm_", "." + ext);
                 Files.writeString(tmp, code);
                 Submission sub;
-                if (platform instanceof SatoriPlatform sp) sub = sp.submitSolution(t, tmp.toString(), lang);
-                else if (platform instanceof CodeforcesPlatform cf) sub = cf.submitSolution(t, tmp.toString(), lang);
-                else throw new PlatformException("Unsupported platform");
+                sub = platform.submitSolution(t, tmp.toString(), lang.toString());
                 Files.deleteIfExists(tmp);
                 return sub;
             }
@@ -278,7 +267,7 @@ public class ContestWindowController {
             Submission sub = task.getValue();
             infoLabel.setText("Submitted: " + sub.getSubmissionId());
             submitButton.setDisable(false);
-            verdictCache.put(sub.getSubmissionId(), "QUE");
+            verdictCache.put(sub.getSubmissionId(), "...");
             subsObservable.add(0, sub);
             subsList.scrollTo(0);
             pollUntilDone(sub);
@@ -309,6 +298,6 @@ public class ContestWindowController {
                 if (fails.incrementAndGet() >= 10)
                     throw new CancellationException();
             }
-        }, 0, 5, TimeUnit.SECONDS);
+        }, 0, 15, TimeUnit.SECONDS);
     }
 }
